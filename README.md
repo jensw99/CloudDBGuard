@@ -1,9 +1,8 @@
 ## API usage
 
-This section describes the simple rules one has to follow when using the \acs{API} provided by \dbnamewos . 
+This section describes the simple rules one has to follow when using the API provided by FamilyGuard. 
 
-  * Before database interactions can be performed, the current metadata always has to be loaded upfront by calling the constructor method, described in Section \ref{sec:initializing}. In order to keep the metadata and the database contents consistent, the \texttt{close} method has to be called after all database related tasks are finished. Doing so saves the current table metadata as well as client side indexes of the used \acs{PPE} schemes, if required. 
-
+  * Before database interactions can be performed, the current metadata always has to be loaded upfront by calling the constructor method, described below. In order to keep the metadata and the database contents consistent, the "close" method has to be called after all database related tasks are finished. Doing so saves the current table metadata as well as client side indexes of the used PPE schemes, if required. 
 ```Java
 API api = new API("pathtometadata", "mypassword", true);
 
@@ -11,9 +10,7 @@ API api = new API("pathtometadata", "mypassword", true);
 
 api.close();
 ```
-
   * FamilyGuard can only manipulate tables, that have been created using it. Otherwise there would be no metadata available to describe the data structures necessary for the layered encryption, possible data distribution across multiple database instances, etc.
-
   * In particular, writing as well as querying only works for keyspaces and tables, that have been created using the methods "addKeyspace" and "addTable".
 
 No more rules need to be followed. The user is free to combine arbitrary interactions with the database as he would do without FamilyGuard.
@@ -298,7 +295,6 @@ DecryptedResults results = api.query
 															// for getting everything
 															// that includes "BMW"
 ```
-
 
 ## Methods for Decrypted Result Sets
 

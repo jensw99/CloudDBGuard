@@ -25,12 +25,9 @@ In order to be able to interact with the databases the API has to be aware of th
 public API(String path, String password, boolean silent);
 ```
 
-  * path: The file path of the \acs{XML} metadata file.
-
-  * password: The password that is needed in order to access the keystores managed by this \acs{API} instance.
-
-  * silent: If set to \texttt{false}, status output and error messages will be printed to the console. While this helps to see what is going on, it can be a performance bottleneck. If set to \texttt{true}, no console output will occur.
-
+  * path: The file path of the XML metadata file.
+  * password: The password that is needed in order to access the keystores managed by this API instance.
+  * silent: If set to "false", status output and error messages will be printed to the console. While this helps to see what is going on, it can be a performance bottleneck. If set to "true", no console output will occur.
 
 Assuming the XML metadata file is located in /home/user/mydb.xml and no console output is wanted, the corresponding constructor call would be:
 
@@ -38,7 +35,7 @@ Assuming the XML metadata file is located in /home/user/mydb.xml and no console 
 API api = new API("/home/user/mydb.xml", "mypassword", true);
 ```
 
-Analogous to the initialization, a closing process is required to save the current keyspace metadata state back to the \acs{XML} file and save client side indexes for future use. All is done by a close method.
+Analogous to the initialization, a closing process is required to save the current keyspace metadata state back to the XML file and save client side indexes for future use. All is done by a close method.
 
 ```java
 public void close();

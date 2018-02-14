@@ -1,6 +1,6 @@
 ## API usage
 
-This section describes the simple rules one has to follow when using the API provided by FamilyGuard. 
+There are a few simple rules one has to follow when using the API provided by FamilyGuard:
 
   * Before database interactions can be performed, the current metadata always has to be loaded upfront by calling the constructor method, described below. In order to keep the metadata and the database contents consistent, the "close" method has to be called after all database related tasks are finished. Doing so saves the current table metadata as well as client side indexes of the used PPE schemes, if required. 
 ```Java

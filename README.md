@@ -47,7 +47,7 @@ Thus, after all database interactions are done, the necessary corresponding call
 api.close();
 ```
 
-### Creating Keyspaces/Namespaces}
+### Creating Keyspaces/Namespaces
 
 Keyspaces are the highest level of data organisation within the databases. At least one keyspace has to be created in order to house tables. Hence, that is also the first thing that has to be done using the API introduced in this thesis. Consider the following CQL statement: 
 
@@ -163,7 +163,7 @@ As can be seen, the all columns containing information, that is not sensitive, a
 
 Deleting tables is very similar to deleting keyspaces. Assuming the cars table created above is supposed to be dropped, that could be done in CQL issuing:
 
-```SQL
+```
 DROP TABLE IF EXISTS ksn.cars;
 ```
 
@@ -174,7 +174,6 @@ public void dropTable(String keyspaceName, String tableName);
 ```
 
   * keyspaceName: The keyspace that contains the table to be deleted.
-
   * tableName: The table to be deleted.
 
 In order to drop the cars table from the example above, one can use:
@@ -187,7 +186,7 @@ api.dropTable("ksn", "cars");
 
 Continuing the example of the cars table introduced above, a CQL statement supposed to fill this table with actual data could look like follows:
 
-```SQL
+```
 INSERT INTO ksn.cars (id, model) 
 VALUES (12, `Audi');
 ```
@@ -205,35 +204,32 @@ public void insertRow(String keyspaceName, String tableName,
 ```
 
   * keyspaceName: The keyspace of the table, that the new row is written to.
-
   * tableName: The name of the table, that the new row is written to.
-
-  * stringData/intData/byteData: Maps, that contain the actual values, that are written into the new row, one for each possible data type. The key of the map always contains the name of the column in which the new value is supposed to be written, whereas the value of the map entry contains the actual value. Thus for example: if the numerical value 12 shall be written in the column named id, the map intData has to contain the key-value-pair $<"id", 12>$. The API then uses the available metadata to find out to which database instance and to what columns the new values have to be written. Note that if columns are encrypted to multiple onion layer columns, one key-value-pair can result in multiple columns.
-
+  * stringData/intData/byteData: Maps, that contain the actual values, that are written into the new row, one for each possible data type. The key of the map always contains the name of the column in which the new value is supposed to be written, whereas the value of the map entry contains the actual value. Thus for example: if the numerical value 12 shall be written in the column named id, the map intData has to contain the key-value-pair <"id", 12>. The API then uses the available metadata to find out to which database instance and to what columns the new values have to be written. Note that if columns are encrypted to multiple onion layer columns, one key-value-pair can result in multiple columns.
   * stringSetData, intSetData, byteSetData: The equivalent to stringData/intData/byteData for collection types. Instead of having one single element in a map's value field, sets of values can be inserted at once. Note that sets can only be inserted into columns, that where specified as collection type columns while creating the table previously.
 
 Usually one will not have to insert values of every available type. If a type is not needed, one can use null, instead of passing an empty map, which is the normal case in practice. The example CQL-query from above can be translated into the following API call: 
 
 ```Java
 api.insertRow("ksn", "cars", 
-			new HashMap<String, String>(){{ //stringData
-				put("model", "Audi");
-			}},
-			new HashMap<String, Long>(){{ //intData
-				put("id", 12);
-			}},
-			null, //byteData
-			null, //stringSetData
-			null, //intSetData
-			null //byteSetData
-		);
+		new HashMap<String, String>(){{ //stringData
+			put("model", "Audi");
+		}},
+		new HashMap<String, Long>(){{ //intData
+			put("id", 12);
+		}},
+		null, //byteData
+		null, //stringSetData
+		null, //intSetData
+		null //byteSetData
+	);
 ```
 
 ### Reading/Querying Data
 
 The API methods introduced so far involved only writing or deleting data, which are operations, that do not return any interesting results. However, a fundamental purpose of databases is of course reading data and thus, getting back exactly specified information. This specification usually comes by executing queries like: 
 
-```SQL
+```
 SELECT id, model 
 FROM ksn.cars
 WHERE ps>100 AND model='BMW';
@@ -248,22 +244,19 @@ public DecryptedResults query(String[] columns, String keyspace, String table, S
 In contrast to the previously discussed API methods it returns an instance of the class "DecryptedResults" (see below) instead of a primitive data type or void. The remaining parameters are as follows:
 
   * columns: The columns that are supposed to be part of the result set. In general, all columns that one would write into the SELECT clause of an CQL query should appear here. The column that contains a table's row identifier is always automatically added.
-
   * keyspace: The plaintext name of keyspace of the table, that the query is executed against.
-
   * table: The plaintext name of the table, that the query is executed against. To continue the analogy to CQL queries: keyspace and table names would appear in the FROM clause. 
-
-  * conditions: A set of conditions that the resulting rows are supposed to meet. Each element of this set is a string representing a condition in the form
-<columnname><operator><term>
+  * conditions: A set of conditions that the resulting rows are supposed to meet. Each element of this set is a string representing a condition in the form: "columnname operator term" with:
 
   * columnname: The plaintext name of the column that is involved in this condition.
-
   * operator: The operator used to define the condition. The following operators are allowed:
 
-  =:equal (makes use of the DET layer)
+```
+  =: equal (makes use of the DET layer)
   >: greater than (makes use of the OPE layer)
   <: less than (makes use of the OPE layer)
   #: includes (makes use of the SE layer, only for text columns)
+```
 
 Note the difference between = and # when it comes to text values. While = checks for equality of complete strings, # can be used to search for single words within these strings. For example working with the condition "model=BMW" would return only rows, where model exactly matches the string "BMW", whereas using the "#" operator would also return rows like "BMW 320d", "new great BMW car", etc. Thus the # operator works similar to SQL's LIKE %term% operator.
 

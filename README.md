@@ -66,23 +66,20 @@ public void addKeyspace(String keyspaceName, String[] dbs, HashMap<String, Strin
 ```
 
   * keyspaceName: the plaintext name of the new keyspace to be created. The API will replace that name with a randomly generated string in every interaction with the database. Thus it will not leak at any point in time.
-
-  * dbs: The database instances available for storing tables of this keyspace. Every string in this array has to be of the form "<DatabaseType>-> <IPAddress>", e.g. "Cassandra->192.168.2.101".
-
+  * dbs: The database instances available for storing tables of this keyspace. Every string in this array has to be of the form "DatabaseType->IPAddress", e.g. "Cassandra->192.168.2.101".
   * params: Additional parameters that specify, how the new keyspace is handled locally by the database instances. Supported parameters are "replication_class" and "replication_factor". If not specified FamilyGuard will use the defaults (replication_class = SimpleStrategy and replication_factor = 1 ).
-
   * password: The password that is needed to access the JCEKS keystore which is used to manage all cryptographic keys required by the PPE schemes that are applied to tables and columns in this keyspace.
 
 The following example shows, how the keyspace "ksn" from the example above could be created, assuming there is an instance of Cassandra and an instance of HBase available for storing table data of this keyspace later on.
 
 ```Java
 api.addKeyspace("ksn", 
-				new String[]{"Cassandra->192.168.0.1" , "HBase->192.168.0.2"},
-				new HashMap<String, String>() {{
-					put("replication_class", "SimpleStrategy");
-					put("replication_factor", "1");
-				}}
-				"mypassword");
+		new String[]{"Cassandra->192.168.0.1" , "HBase->192.168.0.2"},
+		new HashMap<String, String>() {{
+			put("replication_class", "SimpleStrategy");
+			put("replication_factor", "1");
+		}}
+		"mypassword");
 ```
 
 ### Deleting Keyspaces

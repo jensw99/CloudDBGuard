@@ -258,9 +258,9 @@ In contrast to the previously discussed API methods it returns an instance of th
   #: includes (makes use of the SE layer, only for text columns)
 ```
 
-Note the difference between = and # when it comes to text values. While = checks for equality of complete strings, # can be used to search for single words within these strings. For example working with the condition "model=BMW" would return only rows, where model exactly matches the string "BMW", whereas using the "#" operator would also return rows like "BMW 320d", "new great BMW car", etc. Thus the # operator works similar to SQL's LIKE %term% operator.
+  Note the difference between = and # when it comes to text values. While = checks for equality of complete strings, # can be used to search for single words within these strings. For example working with the condition "model=BMW" would return only rows, where model exactly matches the string "BMW", whereas using the "#" operator would also return rows like "BMW 320d", "new great BMW car", etc. Thus the # operator works similar to SQL's LIKE %term% operator.
 
-Note further, that the # operator is only available in encrypted text columns, since it realizes its functionality utilizing the capabilities of SE. 
+  Note further, that the # operator is only available in encrypted text columns, since it realizes its functionality utilizing the capabilities of SE. 
 
   * term: The term used to define the condition.
 
@@ -268,8 +268,8 @@ Thus, the call for the above presented example looks as follows:
 
 ```Java
 DecryptedResults results = api.query
-	(new String[]{"id", "model", "ps"},		   // SELECT
-	"ksn", "cars",										// FROM
+	(new String[]{"id", "model", "ps"},	// SELECT
+	"ksn", "cars",				// FROM
 	new String[]{"ps>100", "model=BMW"});	// WHERE, also # possible
 															// for getting everything
 															// that includes "BMW"

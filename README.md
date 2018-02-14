@@ -51,7 +51,7 @@ api.close();
 
 Keyspaces are the highest level of data organisation within the databases. At least one keyspace has to be created in order to house tables. Hence, that is also the first thing that has to be done using the API introduced in this thesis. Consider the following CQL statement: 
 
-```SQL
+```
 CREATE KEYSPACE ksn 
 WITH REPLICATION = { 
 	'class' : 'SimpleStrategy', 
@@ -84,9 +84,9 @@ api.addKeyspace("ksn",
 
 ### Deleting Keyspaces
 
-Assuming the keyspace created above should be deleted, the necessary \acs{CQL} query would look like this: 
+Assuming the keyspace created above should be deleted, the necessary CQL query would look like this: 
 
-```SQL
+```
 DROP KEYSPACE IF EXISTS ksn;
 ```
 
@@ -107,7 +107,7 @@ api.dropKeyspace("ksn");
 
 After a keyspace has been created, it can be filled with tables. Consider the following CQL query:
 
-```SQL
+```
 CREATE TABLE ksn.cars (
 	id int PRIMARY KEY,
 	model text
@@ -121,25 +121,17 @@ public int addTable(String keyspace, String tablename, TableProfile profile, Dis
 ```
 
   * keyspace: The keyspace in which the new table is to be created.
-
   * tablename: The plaintext name of the new table. Similar to the keyspace name, it will be replaced by a randomly generated string during every interaction with the database. Thus, it will not leak either.
-
-  * profile: The profile that determines which PPE schemes are used for encrypting the content of the columns in the new table. The available profiles are TableProfile.FAST, TableProfile.ALLROUND and TableProfile.STORAGEEFFICIENT.
-
-  * distribution: The algorithm, that determines how the table's columns are distributed across the available database instances. Note that the selection of an algorithm only makes any difference, if more than one database instance was provided during the process of creating the table's keyspace. Otherwise no distribution is possible, since only one database is available. The possible options are DistributionProfile.RANDOM, DistributionProfile.ROUNDROBIN and DistributionProfile.CUSTOM. 
-
+  * profile: The profile that determines which PPE schemes are used for encrypting the content of the columns in the new table. The available profiles are "TableProfile.FAST", "TableProfile.ALLROUND" and "TableProfile.STORAGEEFFICIENT".
+  * distribution: The algorithm, that determines how the table's columns are distributed across the available database instances. Note that the selection of an algorithm only makes any difference, if more than one database instance was provided during the process of creating the table's keyspace. Otherwise no distribution is possible, since only one database is available. The possible options are "DistributionProfile.RANDOM", "DistributionProfile.ROUNDROBIN" and "DistributionProfile.CUSTOM". 
   * columns: An array, that contains a string for every column of the new table. Each of those strings has to have the following format:
 
-[<x>->][un]encrypted-><type>-><name>[->rowid]
+[x->][un]encrypted->type->name[->rowid]
 
-  * x: A numerical value in the interval [1 ... number of available database instances]. The column is stored in the x\textsuperscript{th} available database. Specifying this value is only allowed (and makes sense), if \texttt{Dis- tributionProfile.CUSTOM} was used and more than one database instance was specified when the table's keyspace was created. Assuming the distribution from the example shown in Figure \ref{fig:sepofduties2} from Section \ref{sec:duties} should be achieved, one can seperate the salary column from all the other columns by using 1 for the firstname, lastname and department column and 2 for the salary column (see the example below).
-
-  * [un]encrypted: By specifying a column as \texttt{unencrypted} its contents will be stored without any encryption. In contrast, using the keyword \texttt{encrypted} enables the complete onion layer encryption with the \acs{PPE} schemes used as described in Section \ref{sec:columnprofiles}.
-
+  * x: A numerical value in the interval [1 ... number of available database instances]. The column is stored in the xth available database. Specifying this value is only allowed (and makes sense), if "DistributionProfile.CUSTOM" was used and more than one database instance was specified when the table's keyspace was created. 
+  * [un]encrypted: By specifying a column as "unencrypted" its contents will be stored without any encryption. In contrast, using the keyword "encrypted" enables the complete onion layer encryption.
   * type: The data type of the column's contents. The available options are "string", "string_set", "integer", "integer_set", "byte" and "byte_set" for text, numerical values and byte blobs and corresponding sets of these types.
-
   * name: The plaintext name of the column.
-
   * rowid: The rowid attribute must be set to exactly one column of the table definition in order to specify the row identifier column. If no or more than one column is set to be the row identifier column, the creation of the table will fail. 
 
 While this seems complicated at first glance, it is quite intuitive in practice, as the following two examples will show. In order to create a completely encrypted "cars" table as in the CQL example above, the necessary API call would be:

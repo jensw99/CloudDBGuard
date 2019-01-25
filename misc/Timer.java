@@ -1,7 +1,10 @@
 package misc;
 
 import java.text.DecimalFormat;
-
+/*
+ *  * @author Tim Waage
+ *
+ */
 public class Timer {
 	
 	private long startPoint;

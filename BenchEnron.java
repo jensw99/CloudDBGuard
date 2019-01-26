@@ -8,8 +8,6 @@ import misc.Timer;
 import enums.DistributionProfile;
 import enums.TableProfile;
 
-
-
 /**
  * Class for encrypting and searching in the Enron data set, also compatible to the TREC spam corpus
  * @author Tim Waage
@@ -34,7 +32,7 @@ public class BenchEnron {
 				
 		enronKeyspaceName = _keyspace;
 		
-		api = new API("/home/tim/TimDB/enron_se.xml", "password",  false);
+		api = new API("/path/to/enron_se.xml", "password",  false);
 	}
 	
 	

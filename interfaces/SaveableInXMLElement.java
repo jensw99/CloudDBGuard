@@ -9,15 +9,13 @@ import org.jdom2.*;
  * @author Tim Waage
  */
 public interface SaveableInXMLElement {
-	
-	
+
 	
 	/**
 	 * Stores all information necessary to instantiate an object of this class in a XML Element
 	 * @return the resulting XML Element
 	 */
 	public Element getThisAsXMLElement();
-	
 	
 	
 	/**

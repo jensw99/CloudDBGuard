@@ -57,9 +57,6 @@ class API {
 	private boolean silent;
 	
 	
-	
-	
-	
 	/**
 	 * returns a KeyspaceState by its plaintext name, null if not exists
 	 * @param _name the desired plaintext name 
@@ -178,8 +175,7 @@ class API {
 				db.processRequest(createKeyspaceRequest);
 				if(!silent) Misc.printStatus("Keyspace \"" + _keyspaceName + "\" created on " + db);
 			}
-		}
-		
+		}	
 	}
 	
 	
@@ -824,7 +820,7 @@ class API {
 			
 		}
 				
-		// in allen Condition-involvierten spalten gucken, ob RND layer runter müssen
+		// check if RND layers must be removed for all columns involved in condition
 		
 		for(RowCondition rc : conditions.keySet()) {
 			ColumnState cs = conditions.get(rc);

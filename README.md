@@ -1,4 +1,4 @@
-## API usage
+## API usage .
 
 There are a few simple rules one has to follow when using the API provided by FamilyGuard:
 

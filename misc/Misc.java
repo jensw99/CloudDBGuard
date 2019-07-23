@@ -336,7 +336,7 @@ public class Misc {
 			word = next;
 		}
 		//pad the rest
-		//TODO: next line buggy, see String splitWord(String...)! (best rewrite the whole method accrordingly, if needed)
+		//TODO: next line buggy, see String splitWord(String...)! (best rewrite the whole method accordingly, if needed)
 		result.add(Misc.pkcs7pad(word, n));
 		
 		//for (int i=0; i<result.size(); i++) System.out.println("i:" + i + " " + Misc.ByteArrayToString(result.get(i)));

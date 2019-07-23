@@ -42,9 +42,6 @@ import enums.DatabaseType;
 import enums.RequestType;
 
 
-
-
-
 /**
  * class implementing a database client for Apache HBase
  * 
@@ -699,10 +696,10 @@ public class DBClientHBase extends DBClient
 		Timer t = new Timer();
 		t.start();
 		
-		// column key besorgen
+		// retrieve column key 
 		byte[] key = cs.getKey();
 				
-		// rowkeys, IVs und column Inhalt besorgen
+		// retrieve rowkeys, IVs and column content 
 		TableState table = cs.getTable();
 				
 		String columnName = null;
@@ -721,10 +718,10 @@ public class DBClientHBase extends DBClient
 			
 			scanner = hTable.getScanner(scan);
 					
-			// für alle rows
+			// for all rows
 			for (org.apache.hadoop.hbase.client.Result result = scanner.next(); result != null; result = scanner.next()) {
 				
-				// RND layer wegdecrypten
+				// RND layer decrypt and remove
 				byte[] encryptedValue = result.getValue(columnName.getBytes(), Bytes.toBytes("col"));
 				byte[] iv = result.getValue(table.getIVcolumnName().getBytes(), Bytes.toBytes("col"));
 				byte[] rowkey = result.getRow();
@@ -732,7 +729,7 @@ public class DBClientHBase extends DBClient
 				
 				//System.out.println("Row updated with: " + Misc.bytesToLong(decryptedValue));
 				
-				// decrypteten column Inhalt zurückschreiben
+				// write back decrypted column content
 				Put put = new Put(rowkey);
 				put.addColumn(columnName.getBytes(), "col".getBytes(), decryptedValue);		
 				if(!put.isEmpty()) hTable.put(put);					

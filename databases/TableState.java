@@ -60,7 +60,8 @@ public class TableState implements SaveableInXMLElement{
 		
 		pName = _pName;
 		
-		cName = "enc_" + _pName;//Misc.ByteArrayToCharString(g.generateRandomTableOrColumnName(8)); // "encrypted" tablename
+		//cName = "enc_" + _pName;
+		cName = "enc_" + Misc.ByteArrayToCharString(g.generateRandomTableOrColumnName(8)); // "encrypted" tablename
 						 
 		profile = _profile;
 		

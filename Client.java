@@ -29,7 +29,7 @@ public class Client {
 		
 		api.close();
 		
-		Example Code for how to instert data can be fount in BenchEnron.java
+		Example Code for how to insert data can be found in BenchEnron.java
 		
 		*/
 		

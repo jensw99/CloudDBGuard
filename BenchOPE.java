@@ -112,7 +112,7 @@ public class BenchOPE {
 		}
 		
 		// to test negative and positive values as well, comment out if not needed
-		//for(int x=0; x<testdata.length; x++) testdata[x] -= (maxRangeValue/2);		
+		// for(int x=0; x<testdata.length; x++) testdata[x] -= (maxRangeValue/2);		
 		
 		// to test negative values only, comment out if not needed
 		// for(int x=0; x<testdata.length; x++) testdata[x] -= (maxRangeValue);		
@@ -159,10 +159,7 @@ public class BenchOPE {
 		api.close();		
 	}
 	
-	
-	
-
-	
+		
 	/**
 	 * finds the optimal order for inserting the keys (which is a pre-order traversal of the tree),
 	 * helper function for the encryption part of the benchmark

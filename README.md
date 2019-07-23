@@ -1,6 +1,6 @@
 ## API usage
 
-There are a few simple rules one has to follow when using the API provided by FamilyGuard:
+There are a few simple rules one has to follow when using the API provided by CloudDBGuard:
 
   * Before database interactions can be performed, the current metadata always has to be loaded upfront by calling the constructor method, described below. In order to keep the metadata and the database contents consistent, the "close" method has to be called after all database related tasks are finished. Doing so saves the current table metadata as well as client side indexes of the used PPE schemes, if required. 
 ```Java
@@ -10,10 +10,10 @@ API api = new API("pathtometadata", "mypassword", true);
 
 api.close();
 ```
-  * FamilyGuard can only manipulate tables, that have been created using it. Otherwise there would be no metadata available to describe the data structures necessary for the layered encryption, possible data distribution across multiple database instances, etc.
+  * CloudDBGuard can only manipulate tables, that have been created using it. Otherwise there would be no metadata available to describe the data structures necessary for the layered encryption, possible data distribution across multiple database instances, etc.
   * In particular, writing as well as querying only works for keyspaces and tables, that have been created using the methods "addKeyspace" and "addTable".
 
-No more rules need to be followed. The user is free to combine arbitrary interactions with the database as he would do without FamilyGuard.
+No more rules need to be followed. The user is free to combine arbitrary interactions with the database as he would do without CloudDBGuard.
 
 ## ...in more Detail
 
@@ -59,7 +59,7 @@ WITH REPLICATION = {
 };
 ```
 
-As can be seen, it creates a keyspace called "ksn" (short for keyspace name) with the keyspace to be created having certain parameters. When using FamilyGuard, not only the keyspace name is important, but also what database instances are available to store the tables of the keyspace in the future. One database is mandatory, but arbitrarily more are possible. Thus, the API method for creating keyspaces looks like follows:
+As can be seen, it creates a keyspace called "ksn" (short for keyspace name) with the keyspace to be created having certain parameters. When using CloudDBGuard, not only the keyspace name is important, but also what database instances are available to store the tables of the keyspace in the future. One database is mandatory, but arbitrarily more are possible. Thus, the API method for creating keyspaces looks like follows:
 
 ```Java
 public void addKeyspace(String keyspaceName, String[] dbs, HashMap<String, String> params, String password);
@@ -67,7 +67,7 @@ public void addKeyspace(String keyspaceName, String[] dbs, HashMap<String, Strin
 
   * keyspaceName: the plaintext name of the new keyspace to be created. The API will replace that name with a randomly generated string in every interaction with the database. Thus it will not leak at any point in time.
   * dbs: The database instances available for storing tables of this keyspace. Every string in this array has to be of the form "DatabaseType->IPAddress", e.g. "Cassandra->192.168.2.101".
-  * params: Additional parameters that specify, how the new keyspace is handled locally by the database instances. Supported parameters are "replication_class" and "replication_factor". If not specified FamilyGuard will use the defaults (replication_class = SimpleStrategy and replication_factor = 1 ).
+  * params: Additional parameters that specify, how the new keyspace is handled locally by the database instances. Supported parameters are "replication_class" and "replication_factor". If not specified CloudDBGuard will use the defaults (replication_class = SimpleStrategy and replication_factor = 1 ).
   * password: The password that is needed to access the JCEKS keystore which is used to manage all cryptographic keys required by the PPE schemes that are applied to tables and columns in this keyspace.
 
 The following example shows, how the keyspace "ksn" from the example above could be created, assuming there is an instance of Cassandra and an instance of HBase available for storing table data of this keyspace later on.
@@ -114,7 +114,7 @@ CREATE TABLE ksn.cars (
 ); 
 ```
 
-It creates a very simple table named "cars" within the previously mentioned keyspace "ksn". It has two columns: an integer column "id", which is also the primary key (thus, the row identifier) and a text column "model". To do the same in FamilyGuard, the following method has to be used:
+It creates a very simple table named "cars" within the previously mentioned keyspace "ksn". It has two columns: an integer column "id", which is also the primary key (thus, the row identifier) and a text column "model". To do the same in CloudDBGuard, the following method has to be used:
 
 ```Java
 public int addTable(String keyspace, String tablename, TableProfile profile, DistributionProfile distribution, String[] columns);
@@ -191,7 +191,7 @@ INSERT INTO ksn.cars (id, model)
 VALUES (12, `Audi');
 ```
 
-It creates a new row inside the table with the id (and row identifier) 12 and the text "Audi" in the model column. The API method for inserting a row in FamilyGuard is:
+It creates a new row inside the table with the id (and row identifier) 12 and the text "Audi" in the model column. The API method for inserting a row in CloudDBGuard is:
 
 ```Java
 public void insertRow(String keyspaceName, String tableName, 
@@ -235,7 +235,7 @@ FROM ksn.cars
 WHERE ps>100 AND model='BMW';
 ```
 
-This example is supposed to return all cars with more than 100 PS that where manufactured by BMW. To achieve the same in FamilyGuard the API method "query" has to be used, which comes with the following signature: 
+This example is supposed to return all cars with more than 100 PS that where manufactured by BMW. To achieve the same in CloudDBGuard the API method "query" has to be used, which comes with the following signature: 
 
 ```Java
 public DecryptedResults query(String[] columns, String keyspace, String table, String[] conditions)

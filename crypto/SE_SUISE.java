@@ -65,7 +65,7 @@ public class SE_SUISE extends SEScheme{
 		lambda = _lambda;	
 		location = _location;
 		
-		searchHistoryPath = "/home/tim/TimDB/SE_SUISE_omega";
+		searchHistoryPath = "/Users/michaelbrenner/CloudDBGuard/tim/TimDB/SE_SUISE_omega";
 		
 		f = new PRF();
 	    index = new SE_SUISE_Index(_db, _location);

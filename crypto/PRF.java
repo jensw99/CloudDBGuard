@@ -56,6 +56,10 @@ public class PRF {
 		else iv16 = new IvParameterSpec(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
 		
 		iv8 = new IvParameterSpec(new byte[]{0, 0, 0, 0, 0, 0, 0, 0});
+		
+		//SHIT neu 2 Zeilen
+		if(Security.getProvider("BC")==null)
+			Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); 
 	}
 	
 	

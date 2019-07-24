@@ -28,7 +28,7 @@ import misc.Misc;
 public class OPE_KS extends OPEScheme {
 	
 	// path to dictionaries
-	private String meatadataPath = "/home/tim/TimDB/";
+	private String meatadataPath = "/Users/michaelbrenner/CloudDBGuard/tim/TimDB/";
 	
 	// underlying dictionary
 	private TreeMap<Long, Long> mainDict = null;	
@@ -311,7 +311,7 @@ public class OPE_KS extends OPEScheme {
 	@Override
 	public String toString() {
 		
-		return "Kerschbaum & Schröpfer 2014";
+		return "Kerschbaum & Schr��pfer 2014";
 	}
 	
 	

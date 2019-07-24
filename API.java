@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+//import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -55,6 +55,9 @@ class API {
 	
 	// for turning on/off status output 
 	private boolean silent;
+	
+	
+	
 	
 	
 	/**
@@ -117,13 +120,13 @@ class API {
 		        
 		        
 			} catch (SAXException e) {
-				
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (ParserConfigurationException e) {
-				
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}        
 			
@@ -175,7 +178,8 @@ class API {
 				db.processRequest(createKeyspaceRequest);
 				if(!silent) Misc.printStatus("Keyspace \"" + _keyspaceName + "\" created on " + db);
 			}
-		}	
+		}
+		
 	}
 	
 	
@@ -190,6 +194,7 @@ class API {
 	 */
 	public int addTable(String _keyspace, String _tablename, TableProfile _profile, DistributionProfile _distribution, String[] _columns) {
 		
+	
 		//check if specified keyspace exits	
 		KeyspaceState keyspace = getKeyspaceByName(_keyspace); 
 		if(keyspace == null) {
@@ -310,6 +315,7 @@ class API {
 				
 			// write TableStates to databases
 			for(TableState ts : tableStates) {
+				
 				
 				int numberOfColumnsInTable = 1; // the IV column
 				
@@ -534,6 +540,7 @@ class API {
 			// build insertRequests for all physical tables
 			for(TableState physTable : physTables) {
 			
+				//System.out.println("physTable="+physTable.getPlainName());
 				Request insertRequest = new Request(RequestType.INSERT, new DBLocation(physTable.getKeyspace(), physTable, null, null));
 				
 				// insert IV
@@ -820,7 +827,7 @@ class API {
 			
 		}
 				
-		// check if RND layers must be removed for all columns involved in condition
+		// in allen Condition-involvierten spalten gucken, ob RND layer runter müssen
 		
 		for(RowCondition rc : conditions.keySet()) {
 			ColumnState cs = conditions.get(rc);
@@ -954,7 +961,7 @@ class API {
 			t_query.stop();
 			
 		} catch (Exception e) {
-			
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}							
 						

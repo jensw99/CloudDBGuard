@@ -1,0 +1,15 @@
+517401
+DET + OPE + SE
+[writer, timestamp, body]
+10
+10
+writer=shankman-j^timestamp>16733960^timestamp<16771133^body#shares;id
+writer=shankman-j^timestamp>16225560^timestamp<16310031^body#me?;id
+writer=shankman-j^timestamp>16174930^timestamp<16721079^body#charged;id
+writer=shankman-j^timestamp>16285438^timestamp<16370448^body#values;id
+writer=shankman-j^timestamp>16256715^timestamp<16278658^body#forster;id
+writer=sturm-f^timestamp>16813658^timestamp<16870941^body#following;id
+writer=sturm-f^timestamp>16509155^timestamp<16630273^body#our;id
+writer=schoolcraft-d^timestamp>16720705^timestamp<16944427^body#interests;id
+writer=schoolcraft-d^timestamp>16671585^timestamp<16945407^body#parts;id
+writer=schoolcraft-d^timestamp>16739349^timestamp<16906670^body#associated;id

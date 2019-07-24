@@ -1,0 +1,15 @@
+517401
+OPE + SE
+[timestamp, body]
+10
+10
+timestamp>16271199^timestamp<16568201^body#bds@cpuc;id
+timestamp>16886332^timestamp<16913712^body#gridbusiness;id
+timestamp>16644660^timestamp<16650463^body#energy---which;id
+timestamp>16248189^timestamp<16640465^body#uwaterloo;id
+timestamp>16680405^timestamp<16780139^body#236-9999;id
+timestamp>16758830^timestamp<16905073^body#january@enron;id
+timestamp>16768572^timestamp<16921711^body#gasnews;id
+timestamp>16721061^timestamp<16731122^body#sofas;id
+timestamp>16773686^timestamp<16776591^body#22chec;id
+timestamp>16349357^timestamp<16720746^body#shaw's;id

@@ -10,19 +10,19 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
+//import java.util.Collections;
+//import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+//import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
+//import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.ArrayList;
 
-import org.bouncycastle.crypto.paddings.PKCS7Padding;
+//import org.bouncycastle.crypto.paddings.PKCS7Padding;
 
 import com.datastax.driver.core.utils.Bytes;
-import com.google.common.collect.ImmutableMap;
+//import com.google.common.collect.ImmutableMap;
 
 
 
@@ -37,7 +37,7 @@ public class Misc {
 	final protected static char[] hexArray = "0123456789abcdef".toCharArray();
 	
 	// for long <--> byte[] conversion needed in the HBase Client
-	private static ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);    
+	//private static ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);    
 
 	public static byte[] longToBytes(long x) {
 		
@@ -136,7 +136,7 @@ public class Misc {
 		return result;
 	}
 	
-	private static PKCS7Padding pkcs7padder = new PKCS7Padding();
+//	private static PKCS7Padding pkcs7padder = new PKCS7Padding();
 
 	/**
 	 * turns the components of a byte array into a String, only for debugging
@@ -336,7 +336,7 @@ public class Misc {
 			word = next;
 		}
 		//pad the rest
-		//TODO: next line buggy, see String splitWord(String...)! (best rewrite the whole method accordingly, if needed)
+		//TODO: next line buggy, see String splitWord(String...)! (best rewrite the whole method accrordingly, if needed)
 		result.add(Misc.pkcs7pad(word, n));
 		
 		//for (int i=0; i<result.size(); i++) System.out.println("i:" + i + " " + Misc.ByteArrayToString(result.get(i)));
@@ -495,7 +495,7 @@ public class Misc {
 		long result = 0;
 		
 		char[] s_array = s.toCharArray();
-		char[] array = new char[]{0, 0, 0, 0};
+//		char[] array = new char[]{0, 0, 0, 0};
 		
 		if(s.length() > 0) result += s_array[0] * Math.pow(128, 3);
 		if(s.length() > 1) result += s_array[1] * Math.pow(128, 2);

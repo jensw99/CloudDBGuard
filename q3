@@ -1,0 +1,15 @@
+517401
+DET + DET
+[writer, receiver]
+10
+10
+writer=allen-p^receiver=hargr@webtv.net;id
+writer=allen-p^receiver=ray.alvarez@enron.com;id
+writer=allen-p^receiver=tori.kuykendall@enron.com;id
+writer=arnold-j^receiver=coopers@epenergy.com;id
+writer=arnold-j^receiver=danaggie@hotmail.com;id
+writer=arnold-j^receiver=edie.leschber@enron.com;id
+writer=arnold-j^receiver=mike.maggi@enron.com, john.griffith@enron.com, john.disturnal@enron.com;id
+writer=arnold-j^receiver=rvujtech@carrfut.com;id
+writer=arnold-j^receiver=stevelafontaine@bankofamerica.com;id
+writer=arnold-j^receiver=vince.kaminski@enron.com;id

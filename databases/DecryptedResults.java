@@ -120,11 +120,14 @@ public class DecryptedResults {
 		
 		for(RowCondition rc : SEConditions) {
 			
+			
 			ColumnState column = r.getId().getTable().getColumnByPlainName(rc.getColumnName());
 			
 			ArrayList<String> tmpSEColumn = new ArrayList<String>();
-			if(column.getSEScheme().getName().equals("SUISE")) tmpSEColumn.add(column.getPlainName()); // Plain name for SUISE index
-			else if(column.getSEScheme().getName().equals("SWP2")) tmpSEColumn.add(column.getCSEname()); // SE name for direct reading in SWP
+			if(column.getSEScheme().getName().equals("SUISE")) 
+				tmpSEColumn.add(column.getPlainName()); // Plain name for SUISE index
+			else if(column.getSEScheme().getName().equals("SWP2")) 
+				tmpSEColumn.add(column.getCSEname()); // SE name for direct reading in SWP
 						
 			SE_RowIdentifierSet seResults = column.getSEScheme().search(rc.getStringTerm(), new DBLocation(column.getTable().getKeyspace(), column.getTable(), null, tmpSEColumn));
 			

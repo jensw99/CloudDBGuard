@@ -28,7 +28,7 @@ public class IdToRowkeyMap implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = -6479429264725133359L;
-	private static final String savePath = "/home/tim/TimDB/idMap.ser";
+	private static final String savePath = "/Users/michaelbrenner/CloudDBGuard/tim/TimDB/idMap.ser";
 	// keeps track if this object has been saved
 	private static boolean saved = false;
 	

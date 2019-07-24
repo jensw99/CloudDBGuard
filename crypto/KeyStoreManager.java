@@ -191,6 +191,7 @@ public final class KeyStoreManager {
 		if(exists(label)) {
 			// if it has the expected length return it
 			KeyStore.SecretKeyEntry keyEntry;
+			
 			try {
 				keyEntry = (KeyStore.SecretKeyEntry)keychain.getEntry(label, protParam);
 				byte[] key = keyEntry.getSecretKey().getEncoded();

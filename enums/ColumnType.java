@@ -39,9 +39,9 @@ public enum ColumnType {
     
     
     /**
-     * returns the corresponding SET type given the input type t 
+     * returns the corresponding SET type given the input t 
      * @param t the "normal" ColumnType
-     * @return the corresponding SET type given the input type t 
+     * @return the corresponding SET type given the input t 
      */
     public ColumnType getSetType(ColumnType t) {
     	

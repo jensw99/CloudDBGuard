@@ -6,6 +6,7 @@ import misc.Timer;
 
 import org.jdom2.Element;
 
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 
 import interfaces.SaveableInXMLElement;
@@ -184,6 +185,6 @@ public abstract class DBClient implements SaveableInXMLElement, Callable<Result>
 	}
 	
 	
-	public abstract void registerStatement(String label, String query);
+	public abstract PreparedStatement registerStatement(String label, String query);
 	
 }

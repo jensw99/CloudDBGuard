@@ -33,10 +33,7 @@ public class SE_SWP2 extends SEScheme {
 	
 	private byte[] k1; // key k1
 	private byte[] k2; // key k2
-	
-	
-	
-	
+
 	
 	
 	
@@ -49,14 +46,15 @@ public class SE_SWP2 extends SEScheme {
 	public SE_SWP2(KeyStoreManager _ks, DBClient _db) {
 		
 		super("SWP2", _ks, _db);
-				
+//		System.out.println("Path="+ks.getPath());	
+		//out.println("_ks="+_ks);
 		//setup pseudo random generator G for n-m-bit random byte arrays
 		//no random seed, requirement of the final SWP scheme
 		g = new PRG(12345678);
 		f = new PRF();
 		
-		k1 = ks.getKeyFor("SWP_k1", 16);
-		k2 = ks.getKeyFor("SWP_k2", 16);
+		k1 = ks.getKeyFor("swp_k1", 16);
+		k2 = ks.getKeyFor("swp_k2", 16);
 	}
 	
 	

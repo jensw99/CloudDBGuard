@@ -35,7 +35,7 @@ public class OPE_Boldyreva extends OPEScheme {
 	private HashMap<BigInteger, BigInteger> dgap_cache = null;
 	
 	// path to dictionaries
-	private String meatadataPath = "/home/tim/TimDB/";
+	private String meatadataPath = "/Users/michaelbrenner/CloudDBGuard/tim/TimDB/";
 			
 	// identifier of the currently open dictionary
 	String dictID = "";

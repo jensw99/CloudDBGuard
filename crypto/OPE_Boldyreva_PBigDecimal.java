@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
-import org.nevec.rjm.BigDecimalMath;
+import main.java.org.nevec.rjm.BigDecimalMath;
 
 public class OPE_Boldyreva_PBigDecimal extends BigDecimal{
 

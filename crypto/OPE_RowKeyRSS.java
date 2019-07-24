@@ -23,10 +23,10 @@ import misc.FileSystemHelper;
  */
 public class OPE_RowKeyRSS extends OPEScheme {
 	
-	// TODO im paper anmerken: trotz lazy samplings werden unter umständen auch werte verschlüsselt/gemappt, die nicht benötigt werden
+	// TODO im paper anmerken: trotz lazy samplings werden unter umst��nden auch werte verschl��sselt/gemappt, die nicht ben��tigt werden
 	
 	// path to dictionaries
-	private String meatadataPath = "/home/tim/TimDB/";
+	private String meatadataPath = "/Users/michaelbrenner/CloudDBGuard/tim/TimDB/";
 	
 	// underlying dictionary
 	private TreeMap<Long, Long> mainDict = null;	

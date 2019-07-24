@@ -32,6 +32,8 @@ public class DBClientFactory {
 		// ...if not: do it now
 		DBClient newClient = null;
 		
+		System.out.println("getDBClient _ip="+_ip);
+		
 		if(_type == DatabaseType.CASSANDRA) newClient = new DBClientCassandra(_ip);
 		else if(_type == DatabaseType.HBASE) newClient = new DBClientHBase(_ip);
 		

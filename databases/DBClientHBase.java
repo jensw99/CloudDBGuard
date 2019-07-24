@@ -35,6 +35,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.jdom2.Element;
 
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 
 import enums.ColumnType;
@@ -85,6 +86,7 @@ public class DBClientHBase extends DBClient
 	public void connect() {
 		
 		config = HBaseConfiguration.create();
+		System.out.println("hbase config="+config);
 		try {
 			connection = ConnectionFactory.createConnection(config);
 			admin = connection.getAdmin();
@@ -753,10 +755,15 @@ public class DBClientHBase extends DBClient
 	
 
 	@Override
-	public void registerStatement(String label, String query) {
-		// TODO Auto-generated method stub
+	
+		
+	public PreparedStatement registerStatement(String label, String query) {
+		
+		return null;
 		
 	}
+	
+	
 
 
 	

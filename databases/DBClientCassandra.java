@@ -341,7 +341,7 @@ public class DBClientCassandra extends DBClient {
 			query += ");";
 			
 			// create bound statement
-			BoundStatement insertStatement = session.prepare(query).setConsistencyLevel(ConsistencyLevel.ONE).bind();
+			BoundStatement insertStatement = registerStatement("ins000",query).setConsistencyLevel(ConsistencyLevel.ONE).bind();
 			
 			// insert values
 			
@@ -631,7 +631,7 @@ public class DBClientCassandra extends DBClient {
 		if(!result.isExhausted()){
 			
 			Iterator<Row> it = result.iterator();
-			PreparedStatement updateQuery = session.prepare(
+			PreparedStatement updateQuery = registerStatement("upd000",
 					"UPDATE " + table.getKeyspace().getCipherName() + "." + table.getCipherName() + " " + 
 				    "SET " + columnName + "=? " +
 					"WHERE " + rowkeyColumnName + "=?;");
@@ -661,25 +661,19 @@ public class DBClientCassandra extends DBClient {
 		if(onion.equals("OPE")) cs.setRNDoverOPEStrippedOff(true);
 		
 		t.stop();
-		System.out.println("RND layer removed from column \"" + cs.getPlainName() + "\" (" + t.getRuntimeAsString() + ")");
+		//System.out.println("RND layer removed from column \"" + cs.getPlainName() + "\" (" + t.getRuntimeAsString() + ")");
 	}
 
 
 
 	@Override
-	public void registerStatement(String label, String query) {
+	public PreparedStatement registerStatement(String label, String query) {
 		
-		preparedStatements.put(label, session.prepare(query));
+		if(!preparedStatements.containsKey(label))
+			preparedStatements.put(label, session.prepare(query));
+		
+		return preparedStatements.get(label);
 		
 	}
 
-
-
-	
-	
-
-
-
-	
-	
 }

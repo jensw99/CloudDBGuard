@@ -22,17 +22,24 @@ public class BenchEnron {
 	private long timeForDBCommunication;
 	private Timer timerWIthAPIOverhead;
 	private Timer timerWithAPIOverheadAndParsing;
-	
+	private int dbtype;
 	// API object
 	private API api;
+	private TableProfile tableprofile=null;
 	
 	
 	
-	public BenchEnron(String _keyspace) {
+	public BenchEnron(String _keyspace, String _xml, String _password,int _dbtype, TableProfile _tableprofile) {
 				
 		enronKeyspaceName = _keyspace;
 		
-		api = new API("/path/to/enron_se.xml", "password",  false);
+		api = new API(_xml, _password,  true);
+		
+		dbtype=_dbtype;
+		
+		tableprofile=_tableprofile;
+		
+		System.out.println("BenchEnron DB="+(dbtype==0?"CASSANDRA":"HBASE")+" profile="+tableprofile.getValue());
 	}
 	
 	
@@ -49,9 +56,12 @@ public class BenchEnron {
 		
 		
 		// create new enron mail table
-		api.addKeyspace(enronKeyspaceName, new String[]{"Cassandra->127.0.0.1", "HBase->127.0.0.1"}, null, "password");
+		if(dbtype==1)
+			api.addKeyspace(enronKeyspaceName, new String[]{"HBase->127.0.0.1"}, null, "password");
+		else
+			api.addKeyspace(enronKeyspaceName, new String[]{"Cassandra->127.0.0.1"}, null, "password");
 		
-		api.addTable(enronKeyspaceName, "mail", TableProfile.STORAGEEFFICIENT, DistributionProfile.ROUNDROBIN, new String[]
+		api.addTable(enronKeyspaceName, "mail", tableprofile, DistributionProfile.ROUNDROBIN, new String[]
 				{"encrypted->String->id->rowkey",
 				 "encrypted->String->sender",
 				 "encrypted->String_set->receiver",
@@ -113,11 +123,12 @@ public class BenchEnron {
 	public void importDir(File input, String rootFolder) {
 		
 		File[] inputFiles = input.listFiles();
-		
+		System.out.println("contains "+inputFiles.length+" files");
 		if (inputFiles != null) {
 			for (int i = 0; i < inputFiles.length; i++) {
 				
 				if(inputFiles[i].isDirectory()) {
+					System.out.println("import dir "+inputFiles[i].getAbsolutePath());
 					importDir(inputFiles[i], rootFolder);
 				}
 				else {	
@@ -140,9 +151,10 @@ public class BenchEnron {
 	 */
 	protected long importFile(String inputFilePath) {
 		
+		//System.out.println("import file "+inputFilePath);
 		timerWithAPIOverheadAndParsing.start();
 		Enron_Mail mail = Enron_Mail.parseFile(inputFilePath);
-		
+		//System.out.println("parse ok.");
 		timerWIthAPIOverhead.start();
 		
 		timeForDBCommunication += api.insertRow(enronKeyspaceName, "mail", 

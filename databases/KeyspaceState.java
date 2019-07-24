@@ -56,8 +56,7 @@ public class KeyspaceState implements SaveableInXMLElement {
 		dbs = _dbs;
 		
 		// generate an "encrypted" keyspace name
-		//cname = "enc_" + pname;
-		cname = "enc_" +Misc.ByteArrayToCharString(g.generateRandomTableOrColumnName(8));
+		cname = "enc_" + pname;//Misc.ByteArrayToCharString(g.generateRandomTableOrColumnName(8));
 		
 		keystore = _keystore;
 		

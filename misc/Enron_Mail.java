@@ -147,7 +147,8 @@ public class Enron_Mail {
 		this.xfrom = _xfrom;
 		this.contenttype = _contenttype;
 		
-		this.writer = _path.split("/")[5];
+		//System.out.println("path="+_path);
+		this.writer = _path.split("/")[4];  //SHIT war 4
 			
 	}
 	
@@ -667,7 +668,7 @@ public class Enron_Mail {
 	    } 
 		catch (Exception e) {
 	         
-			//e.printStackTrace();
+			e.printStackTrace();
 	    }
 		finally {
 			try {

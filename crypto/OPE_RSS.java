@@ -21,7 +21,7 @@ import misc.FileSystemHelper;
 public class OPE_RSS extends OPEScheme {
 	
 	// path to dictionaries
-	private String metadataPath = "/home/tim/TimDB/";
+	private String metadataPath = "/Users/michaelbrenner/CloudDBGuard/tim/TimDB/";
 	
 	// underlying dictionary
 	private TreeMap<Long, Long> mainDict = null;	

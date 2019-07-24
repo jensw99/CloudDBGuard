@@ -3,7 +3,7 @@ package misc.org.nevec.rjm ;
 import java.util.* ;
 import java.math.* ;
 
-import org.nevec.rjm.Ifactor;
+import misc.org.nevec.rjm.Ifactor;
 
 
 /** Factorials.

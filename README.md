@@ -1,3 +1,23 @@
+## CloudDBGuard
+
+Column family stores are a special case of NoSQL databases. To achieve data protection while at the same time supporting advanced data
+management in these stores, novel cryptographic algorithms like order-preserving and searchable encryption schemes are needed. In this project, several such schemes are implemented and tested with the stores Apache HBase and Apache Cassandra.
+
+## Cite as
+-  Lena Wiese, Tim Waage, Michael Brenner. CloudDBGuard: A Framework for encrypted data storage in NoSQL Wide Column Stores. Data and Knowledge Engineering. Elsevier, 2019. (Accepted for publication / in print)
+- Daniel Homann and Lena Wiese. Inference Attacks on Fuzzy Searchable Encryption Schemes. Transactions on Data Privacy. Tdp.cat, 2019. (Accepted for publication / in print)
+-  Tim Waage and Lena Wiese. CloudDBGuard: Enabling Sorting and Searching on Encrypted Data in NoSQL Cloud Databases. 20th International Conference on Big Data Analytics and Knowledge Discovery - DaWaK 2018. Springer, 2018.
+- Lena Wiese, Daniel Homann, Tim Waage and Michael Brenner. Homomorphe Verschlüsselung für Cloud-Datenbanken: Übersicht und Anforderungsanalyse. Sicherheit 2018, Lecture Notes in Informatics (LNI), pages 221-234. Gesellschaft für Informatik e.V., 2018.
+- Tim Waage, Lena Wiese. Property preserving encryption in NoSQL wide column stores. In: Cloud and Trusted Computing (OnTheMove Federated Conferences). Springer, 2017. 27. 
+- Christian Göge, Tim Waage, Daniel Homann, Lena Wiese. Improving Fuzzy Searchable Encryption with Direct Bigram Embedding. TrustBus (14th International Conference on Trust, Privacy & Security in Digital Business). Springer, 2017.
+- Christian Göge, Tim Waage and Lena Wiese. Implementing a Similarity Searchable Encryption Scheme for Cloud Database Usage. In 29th GI-Workshop Grundlagen von Datenbanken, CEUR Workshop Proceedings. CEUR-WS.org, 2017.
+- Tim Waage and Lena Wiese. Implementierung von kryptographischen Sicherheitsverfahren für Cassandra und HBase. (Implementing cryptographic security mechanisms for Cassandra and HBase.) Handbuch der Maschinellen Datenverarbeitung, Springer, 2016.
+- Tim Waage und Lena Wiese. Ordnungserhaltende Verschlüsselung in NoSQL Spaltenfamilien-Datenbanken. (Order-preserving encryption in NoSQL column family databases.). In DACH Security. Syssec, 2016.
+- Tim Waage, Daniel Homann and Lena Wiese. Practical Application of Order-preserving Encryption inWide Column Stores. In SECRYPT International Conference on Security and Cryptography. SciTePress, 2016.
+- Lena Wiese and Tim Waage. Benutzerfreundliche Verschlüsselung für Cloud-Datenbanken (User-friendly encryption for cloud databases). In DACH Security. Syssec, 2015.
+- Tim Waage, Ramaninder Singh Jhajj, Lena Wiese. Searchable Encryption in Apache Cassandra. In Foundations and Practice of Security – 8th International Symposium. Lecture Notes in Computer Science 9482, Springer, 2015.
+- Tim Waage and Lena Wiese. Benchmarking encrypted data storage in HBase and Cassandra with YCSB. In Foundations and Practice of Security, volume 8930 of Lecture Notes in Computer Science, pages 311–325. Springer, 2014.
+
 ## API usage
 
 There are a few simple rules one has to follow when using the API provided by CloudDBGuard:

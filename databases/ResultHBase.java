@@ -469,7 +469,6 @@ public class ResultHBase extends Result{
 
 	@Override
 	public long getSize() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 

@@ -6,6 +6,9 @@ management in these stores, novel cryptographic algorithms like order-preserving
 - ![FamilyGuard Logo](/logofamilyguardsmall.png) Project FamilyGuard (DFG project number WI 4086/2-1) 
 - Project CloudDBGuard (DFG project number WI 4086/2-2) ![CloudDBGuard Logo](/logoclouddbguardsmall.png)
 
+|![FamilyGuard Logo](/logofamilyguardsmall.png)| Project FamilyGuard | (DFG project number WI 4086/2-1)|
+|![CloudDBGuard Logo](/logoclouddbguardsmall.png)| Project CloudDBGuard | (DFG project number WI 4086/2-2)|
+
 ## Cite as
 -  Lena Wiese, Tim Waage, Michael Brenner. CloudDBGuard: A Framework for encrypted data storage in NoSQL Wide Column Stores. Data and Knowledge Engineering. Elsevier, 2019.
 - Daniel Homann and Lena Wiese. Inference Attacks on Fuzzy Searchable Encryption Schemes. Transactions on Data Privacy. Tdp.cat, 2019. 

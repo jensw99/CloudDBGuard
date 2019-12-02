@@ -1,4 +1,4 @@
-## CloudDBGuard ![CloudDBGuard Logo](/logoclouddbguard.PNG)
+## CloudDBGuard ![CloudDBGuard Logo](/logoclouddbguardsmall.PNG)
 
 Column family stores are a special case of NoSQL databases. To achieve data protection while at the same time supporting advanced data
 management in these stores, novel cryptographic algorithms like order-preserving and searchable encryption schemes are needed. In this project, several such schemes are implemented and tested with the stores Apache HBase and Apache Cassandra.

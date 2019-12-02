@@ -1,10 +1,10 @@
-## CloudDBGuard ![CloudDBGuard Logo](/logoclouddbguardsmall.png)
+## CloudDBGuard 
 
 Column family stores are a special case of NoSQL databases. To achieve data protection while at the same time supporting advanced data
 management in these stores, novel cryptographic algorithms like order-preserving and searchable encryption schemes are needed. In this project, several such schemes are implemented and tested with the stores Apache HBase and Apache Cassandra.
 ### Funding
-- Project FamilyGuard (DFG project number WI 4086/2-1)
-- Project CloudDBGuard (DFG project number WI 4086/2-2)
+- Project FamilyGuard (DFG project number WI 4086/2-1) ![FamilyGuard Logo](/logofamilyguardsmall.png)
+- Project CloudDBGuard (DFG project number WI 4086/2-2) ![CloudDBGuard Logo](/logoclouddbguardsmall.png)
 
 ## Cite as
 -  Lena Wiese, Tim Waage, Michael Brenner. CloudDBGuard: A Framework for encrypted data storage in NoSQL Wide Column Stores. Data and Knowledge Engineering. Elsevier, 2019.

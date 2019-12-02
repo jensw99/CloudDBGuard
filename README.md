@@ -5,6 +5,7 @@ management in these stores, novel cryptographic algorithms like order-preserving
 ### Funding
 - Project FamilyGuard (DFG project number WI 4086/2-1)  
 - Project CloudDBGuard (DFG project number WI 4086/2-2) 
+
 ![FamilyGuard Logo](/logofamilyguardsmall.png) ![CloudDBGuard Logo](/logoclouddbguardsmall.png)
 ## Cite as
 -  Lena Wiese, Tim Waage, Michael Brenner. CloudDBGuard: A Framework for encrypted data storage in NoSQL Wide Column Stores. Data and Knowledge Engineering. Elsevier, 2019.

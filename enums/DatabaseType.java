@@ -7,7 +7,7 @@ package enums;
  */
 public enum DatabaseType {
 
-	CASSANDRA(1),	// Apache Cassandra
+    CASSANDRA(1),	// Apache Cassandra
     HBASE(2);		// Apache HBase
 	
 	// the value representing the type constant

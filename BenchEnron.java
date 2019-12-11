@@ -106,11 +106,9 @@ public class BenchEnron {
 	}
 	
 	
-	public void search() {
-		
+	//public void search() {
 		// not needed anymore, as searching = querying via the API class
-		
-	}
+	//}
 	
 	
 	

@@ -192,6 +192,7 @@ public class FileSystemHelper {
 		return bytesWritten;
 	}
 	
+	
 	/**
 	 * reads a hashtable from a file
 	 * @param path location of the hashtable
@@ -405,8 +406,6 @@ public class FileSystemHelper {
 		
 		return result;
 	}
-	
-	
 	
 	/**
 	 * Appends contents to a file, needed for creating import scripts

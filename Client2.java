@@ -21,7 +21,7 @@ public class Client2
 			admin = connection.getAdmin();
 			System.out.println("Connected to HBase cluster");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 

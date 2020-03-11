@@ -2,6 +2,9 @@
 
 Column family stores are a special case of NoSQL databases. To achieve data protection while at the same time supporting advanced data
 management in these stores, novel cryptographic algorithms like order-preserving and searchable encryption schemes are needed. In this project, several such schemes are implemented and tested with the stores Apache HBase and Apache Cassandra.
+![Cloud Databases](/clouddatabases.png)
+
+
 ### Funding
 - Project FamilyGuard (DFG project number WI 4086/2-1)  
 - Project CloudDBGuard (DFG project number WI 4086/2-2) 

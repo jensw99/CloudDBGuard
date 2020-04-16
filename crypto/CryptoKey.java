@@ -10,7 +10,6 @@ import javax.crypto.SecretKey;
 public class CryptoKey implements SecretKey {
 
 	private static final long serialVersionUID = 1L;
-	
 	// the key itself
 	private byte[] key;
 	

@@ -11,7 +11,7 @@ management in these stores, novel cryptographic algorithms like order-preserving
 
 ![FamilyGuard Logo](/logofamilyguardsmall.png) ![CloudDBGuard Logo](/logoclouddbguardsmall.png)
 ## Cite as
--  Lena Wiese, Tim Waage, Michael Brenner. CloudDBGuard: A Framework for encrypted data storage in NoSQL Wide Column Stores. Data and Knowledge Engineering. Elsevier, 2019.
+-  Lena Wiese, Tim Waage, Michael Brenner. CloudDBGuard: A Framework for encrypted data storage in NoSQL Wide Column Stores. Data and Knowledge Engineering. Elsevier, 2020.
 - Daniel Homann and Lena Wiese. Inference Attacks on Fuzzy Searchable Encryption Schemes. Transactions on Data Privacy. Tdp.cat, 2019. 
 -  Tim Waage and Lena Wiese. CloudDBGuard: Enabling Sorting and Searching on Encrypted Data in NoSQL Cloud Databases. 20th International Conference on Big Data Analytics and Knowledge Discovery - DaWaK 2018. Springer, 2018.
 - Lena Wiese, Daniel Homann, Tim Waage and Michael Brenner. Homomorphe Verschlüsselung für Cloud-Datenbanken: Übersicht und Anforderungsanalyse. Sicherheit 2018, Lecture Notes in Informatics (LNI), pages 221-234. Gesellschaft für Informatik e.V., 2018.

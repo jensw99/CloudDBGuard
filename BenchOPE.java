@@ -24,7 +24,7 @@ public class BenchOPE {
 	// API object
 	private API api;
 	
-	// mode
+	// mode of ordered input: best, average or worst
 	private String mode;
 		
 	

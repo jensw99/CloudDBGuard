@@ -16,9 +16,9 @@ import enums.TableProfile;
  * @author Tim Waage
  *
  *
- * Abhängigkeiten:
+ * Dependencies:
  * 
- * maximal Java SE 1.8u144 wegen JCEKS keystore issue
+ * maximal Java SE 1.8u144 due to JCEKS keystore issue
  * 
  * 
  * bcprov-jdk15on-160.jar           

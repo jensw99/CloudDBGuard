@@ -47,8 +47,6 @@ public class DBClientCassandra extends DBClient {
 	
 	private HashMap<String, PreparedStatement> preparedStatements;
 	
-	
-	
 	/**
 	 * Constructor
 	 * @param address where to connect to, e.g. 127.0.0.1
@@ -60,7 +58,6 @@ public class DBClientCassandra extends DBClient {
 		
 		preparedStatements = new HashMap<String, PreparedStatement>();
 	}
-	
 	
 	
 	/**

@@ -4,9 +4,8 @@ import java.io.IOException;
 import java.io.Serializable;
 
 class ByteArray implements Serializable, Comparable<ByteArray> {
-	/**
-	 * 
-	 */
+
+	
 	private static final long serialVersionUID = 1016164086081817429L;
 	private byte[] array;
 
@@ -27,7 +26,6 @@ class ByteArray implements Serializable, Comparable<ByteArray> {
 	}
 	
 	
-
 	ByteArray(byte[] array) {
 		this.array = array.clone();
 	}

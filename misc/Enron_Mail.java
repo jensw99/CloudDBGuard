@@ -147,8 +147,8 @@ public class Enron_Mail {
 		this.xfrom = _xfrom;
 		this.contenttype = _contenttype;
 		
-		//System.out.println("path="+_path);
-		this.writer = _path.split("/")[4];  //SHIT war 4
+		System.out.println("path="+_path);
+		this.writer = _path.split("\\\\")[2];
 			
 	}
 	

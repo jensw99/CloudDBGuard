@@ -21,23 +21,23 @@ import enums.TableProfile;
  * maximal Java SE 1.8u144 wegen JCEKS keystore issue
  * 
  * 
- * bcprov-jdk15on-160.jar           
- * commons-codec-1.11.jar   
- * hadoop-common-2.7.7.jar  
- * jdom-2.0.6.jar          
- * netty-buffer-4.0.33.Final.jar  
- * netty-handler-4.0.33.Final.jar
+ * bcprov-jdk15on-160.jar     x      
+ * commons-codec-1.11.jar  x 
+ * hadoop-common-2.7.7.jar  x
+ * jdom-2.0.6.jar    x      
+ * netty-buffer-4.0.33.Final.jar    x
+ * netty-handler-4.0.33.Final.jar  x
  * cassandra-driver-core-3.0.1.jar  
- * commons-math3-3.6.1.jar  
- * hbase-client-2.1.2.jar   
+ * commons-math3-3.6.1.jar  x
+ * hbase-client-2.1.2.jar   x
  * log4j-1.2.17.jar        
- * netty-codec-4.0.33.Final.jar   
- * netty-transport-4.0.33.Final.jar
+ * netty-codec-4.0.33.Final.jar   x
+ * netty-transport-4.0.33.Final.jar  x
  * cassandra-driver-core-3.1.4.jar  
  * guava-16.0.1.jar         
- * hbase-common-2.1.2.jar   
+ * hbase-common-2.1.2.jar   x
  * metrics-core-3.1.2.jar  
- * netty-common-4.0.33.Final.jar  
+ * netty-common-4.0.33.Final.jar   x 
  * slf4j-api-1.7.25.jar
  * 
  * 

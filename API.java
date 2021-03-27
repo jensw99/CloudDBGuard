@@ -638,7 +638,8 @@ class API {
 						
 							// Encrypt
 							ArrayList<String> tmpColumns = new ArrayList<String>();
-							tmpColumns.add(cs.getPlainName()); // Plain column name for the client side index
+							tmpColumns.add(cs.getCOPEname()); // cOPE column name for the client side index
+							System.out.println(cs.getPlainName());
 							
 							long   encryptedOPEValue = cs.getOPEScheme().encrypt(value, new DBLocation(physTable.getKeyspace(), physTable, null, tmpColumns));
 							byte[] encryptedDETValue = cs.getDETScheme().encrypt(Misc.longToBytes(value));

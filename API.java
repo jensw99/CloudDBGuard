@@ -638,8 +638,7 @@ class API {
 						
 							// Encrypt
 							ArrayList<String> tmpColumns = new ArrayList<String>();
-							tmpColumns.add(cs.getCOPEname()); // cOPE column name for the client side index
-							System.out.println(cs.getPlainName());
+							tmpColumns.add(cs.getPlainName()); // plain name for the client side index
 							
 							long   encryptedOPEValue = cs.getOPEScheme().encrypt(value, new DBLocation(physTable.getKeyspace(), physTable, null, tmpColumns));
 							byte[] encryptedDETValue = cs.getDETScheme().encrypt(Misc.longToBytes(value));
@@ -652,8 +651,14 @@ class API {
 							// OPE column						
 							// store without RND Layer if rowkey column, otherwise the datamodel would be broken
 							if(cs.isRowkeyColumn())				  insertRequest.getByteArgs().put(cs.getCOPEname(), 				encryptedIntRowkey);
-							else if(cs.isRNDoverOPEStrippedOff()) insertRequest.getByteArgs().put(cs.getCOPEname(), Misc.longToBytes(encryptedOPEValue));
-							else                                  insertRequest.getByteArgs().put(cs.getCOPEname(),               encryptedRNDOPEValue) ;
+							else if(cs.isRNDoverOPEStrippedOff()) {
+								insertRequest.getByteArgs().put(cs.getCOPEname(), Misc.longToBytes(encryptedOPEValue));
+								System.out.println("test");
+							}
+							else {
+								insertRequest.getByteArgs().put(cs.getCOPEname(),               encryptedRNDOPEValue) ;
+								System.out.println(encryptedRNDOPEValue.length);
+							}
 						
 							// DET column (only if not a rowkey column)
 							if(!cs.isRowkeyColumn()) {

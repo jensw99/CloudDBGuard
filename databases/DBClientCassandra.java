@@ -337,11 +337,12 @@ public class DBClientCassandra extends DBClient {
 			query = query.substring(0, query.length()-1);
 			query += ");";
 			
+			
+			
 			// create bound statement
-			BoundStatement insertStatement = registerStatement("ins000",query).setConsistencyLevel(ConsistencyLevel.ONE).bind();
+			BoundStatement insertStatement = registerStatement(query, query).setConsistencyLevel(ConsistencyLevel.ONE).bind();
 			
 			// insert values
-			
 			for(String s : currentRequest.getStringArgs().keySet()) insertStatement.setString(s, currentRequest.getStringArgs().get(s));
 			for(String s : currentRequest.getIntArgs().keySet()) insertStatement.setLong(s, currentRequest.getIntArgs().get(s));
 			for(String s : currentRequest.getByteArgs().keySet()) insertStatement.setBytes(s, ByteBuffer.wrap(currentRequest.getByteArgs().get(s)));
@@ -362,6 +363,7 @@ public class DBClientCassandra extends DBClient {
 			timer.start();
 			tmp = session.execute(insertStatement);
 			timer.stop();
+			
 			
 			return new ResultCassandra(currentRequest, tmp, timer.getRuntime());
 			
@@ -417,7 +419,7 @@ public class DBClientCassandra extends DBClient {
 				query += ";";
 				
 			
-				//System.out.println(query);
+				System.out.println(query);
 				timer.start();
 				tmp = session.execute(query);
 				timer.stop();

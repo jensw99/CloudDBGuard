@@ -29,19 +29,18 @@ import java.util.Set;
 
 import misc.Misc;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select;
-import com.datastax.driver.core.schemabuilder.Create;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.relation.Relation;
+import com.datastax.oss.driver.api.querybuilder.term.Term;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.*;
 
 import crypto.Index;
 import databases.DBClient;
@@ -96,8 +95,7 @@ public class DBStorage extends Index implements Storage {
 	private static final String COLUMNINDEXNAME = "ind";
 
 	
-	private Session session;
-	private Cluster cluster;
+	private CqlSession session;
 	
 	private PreparedStatement preparedMainInsert;
 	private PreparedStatement[] preparedTmpInsert = new PreparedStatement[2];
@@ -189,15 +187,15 @@ public class DBStorage extends Index implements Storage {
 		if( !validLevels.contains(level))
 			return nodes;
 		
-		Statement select = QueryBuilder.select(COLUMNHKEYNAME, COLUMNC1NAME, COLUMNC2NAME, COLUMNIVNAME)
-				.from(keyspaceName, mainTableName)
-				.where(QueryBuilder.eq(COLUMNLEVELNAME, level));
+		Relation rel = Relation.column(COLUMNLEVELNAME).isEqualTo(literal(level));
+		SimpleStatement select = selectFrom(keyspaceName, mainTableName)
+				.columns(COLUMNHKEYNAME, COLUMNC1NAME, COLUMNC2NAME, COLUMNIVNAME).where(rel).allowFiltering().build();
 		ResultSet res = session.execute(select);
 		for(Row r : res){
-			ByteBuffer hkey = r.getBytes(COLUMNHKEYNAME);
-			ByteBuffer c1 = r.getBytes(COLUMNC1NAME);
-			ByteBuffer c2 = r.getBytes(COLUMNC2NAME);
-			ByteBuffer iv = r.getBytes(COLUMNIVNAME);
+			ByteBuffer hkey = r.getByteBuffer(COLUMNHKEYNAME);
+			ByteBuffer c1 = r.getByteBuffer(COLUMNC1NAME);
+			ByteBuffer c2 = r.getByteBuffer(COLUMNC2NAME);
+			ByteBuffer iv = r.getByteBuffer(COLUMNIVNAME);
 			ServerValueNode val = new ServerValueNode(c1.array(), c2.array(), iv.array());
 			ServerNode node = new ServerNode(hkey.array(), val);
 			nodes.add(node);
@@ -254,14 +252,18 @@ public class DBStorage extends Index implements Storage {
 				if( validLevels.contains(i))
 					levels.add(i);
 			}
-			Statement select = QueryBuilder.select(COLUMNC2NAME, COLUMNIVNAME)
-					.from(keyspaceName, mainTableName)
-					.where(QueryBuilder.in(COLUMNLEVELNAME, levels));
+			
+			List<Term> levelTerms= new ArrayList<Term>();
+			for(int level : levels) levelTerms.add(literal(level));
+			
+			Relation rel = Relation.column(COLUMNLEVELNAME).in(tuple(levelTerms));
+			SimpleStatement select = selectFrom(keyspaceName, mainTableName)
+					.columns(COLUMNC2NAME, COLUMNIVNAME).where(rel).allowFiltering().build();
 	
 			ResultSet results = session.execute(select);
 			for (Row row: results){
-				ByteBuffer c2 = row.getBytes(0);
-				ByteBuffer iv = row.getBytes(1);
+				ByteBuffer c2 = row.getByteBuffer(0);
+				ByteBuffer iv = row.getByteBuffer(1);
 				C2 newC2=new C2(c2.array(), iv.array());
 				res.add(newC2);
 			}
@@ -357,11 +359,11 @@ public class DBStorage extends Index implements Storage {
 			return ramStorage.isKeyInLevel(hkey, level);
 		}
 		else{
-						
-			Statement select = QueryBuilder.select().countAll()
-					.from(keyspaceName, mainTableName).allowFiltering()
-					.where(QueryBuilder.eq(COLUMNLEVELNAME, level))
-					.and(QueryBuilder.eq(COLUMNHKEYNAME, ByteBuffer.wrap(hkey)));
+			
+			Relation rel1 = Relation.column(COLUMNLEVELNAME).isEqualTo(literal(level));
+			Relation rel2 = Relation.column(COLUMNHKEYNAME).isEqualTo(literal(ByteBuffer.wrap(hkey)));
+			SimpleStatement select = selectFrom(keyspaceName, mainTableName).countAll()
+					.where(rel1, rel2).allowFiltering().build();
 	
 			ResultSet res = session.execute(select);
 			
@@ -389,11 +391,10 @@ public class DBStorage extends Index implements Storage {
 			return ramStorage.getC1(hkey, level);
 		}
 		else{
-			
-			Statement select = QueryBuilder.select(COLUMNC1NAME)
-					.from(keyspaceName, mainTableName).allowFiltering()
-					.where(QueryBuilder.eq(COLUMNHKEYNAME, ByteBuffer.wrap(hkey)))
-					.and(QueryBuilder.eq(COLUMNLEVELNAME, level));
+			Relation rel1 = Relation.column(COLUMNLEVELNAME).isEqualTo(literal(level));
+			Relation rel2 = Relation.column(COLUMNHKEYNAME).isEqualTo(literal(ByteBuffer.wrap(hkey)));
+			SimpleStatement select = selectFrom(keyspaceName, mainTableName)
+					.columns(COLUMNC1NAME).where(rel1, rel2).allowFiltering().build();
 	
 			ResultSet res = session.execute(select);
 			
@@ -402,7 +403,7 @@ public class DBStorage extends Index implements Storage {
 			//System.out.println(Misc.ByteArrayToString(ret));
 			
 			//return ret;
-			return res.one().getBytes(0).array();
+			return res.one().getByteBuffer(0).array();
 		}
 	}
 
@@ -416,38 +417,37 @@ public class DBStorage extends Index implements Storage {
 	
 		session.execute("CREATE KEYSPACE IF NOT EXISTS "+keyspaceName+" WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };");
 		
-		Create create = SchemaBuilder.createTable(keyspaceName, mainTableName)
-				.addColumn(COLUMNHKEYNAME, DataType.blob())
-				.addPartitionKey(COLUMNLEVELNAME, DataType.bigint())			
-				.addColumn(COLUMNC1NAME, DataType.blob())
-				.addColumn(COLUMNC2NAME, DataType.blob())
-				.addColumn(COLUMNIVNAME, DataType.blob())
-				.addClusteringColumn(COLUMNLEVELPOSNAME, DataType.bigint())
-				.ifNotExists();
+		SimpleStatement create = SchemaBuilder.createTable(keyspaceName, mainTableName).ifNotExists()
+				.withPartitionKey(COLUMNLEVELNAME, DataTypes.BIGINT)
+				.withColumn(COLUMNHKEYNAME, DataTypes.BLOB)		
+				.withColumn(COLUMNC1NAME, DataTypes.BLOB)
+				.withColumn(COLUMNC2NAME, DataTypes.BLOB)
+				.withColumn(COLUMNIVNAME, DataTypes.BLOB)
+				.withClusteringColumn(COLUMNLEVELPOSNAME, DataTypes.BIGINT).build();
 		session.execute(create);
 		
-		Insert insert = QueryBuilder.insertInto(keyspaceName, mainTableName)
-				.value(COLUMNLEVELNAME, QueryBuilder.bindMarker())
-				.value(COLUMNHKEYNAME, QueryBuilder.bindMarker())
-				.value(COLUMNC1NAME, QueryBuilder.bindMarker())
-				.value(COLUMNC2NAME, QueryBuilder.bindMarker())
-				.value(COLUMNIVNAME, QueryBuilder.bindMarker())
-				.value(COLUMNLEVELPOSNAME, QueryBuilder.bindMarker());
+		SimpleStatement insert = insertInto(keyspaceName, mainTableName)
+				.value(COLUMNLEVELNAME, bindMarker())
+				.value(COLUMNHKEYNAME, bindMarker())
+				.value(COLUMNC1NAME, bindMarker())
+				.value(COLUMNC2NAME, bindMarker())
+				.value(COLUMNIVNAME, bindMarker())
+				.value(COLUMNLEVELPOSNAME, bindMarker()).build();
 		
 		preparedMainInsert = session.prepare(insert);
 		
 		for(int i = 0; i < 2; i++){
 			create = SchemaBuilder.createTable(keyspaceName, TMPSTORAGE[i])
-					.addColumn(COLUMNC2NAME, DataType.blob())
-					.addColumn(COLUMNIVNAME, DataType.blob())
-					.addPartitionKey(COLUMNINDEXNAME, DataType.bigint())
-					.ifNotExists();
+					.ifNotExists()
+					.withPartitionKey(COLUMNINDEXNAME, DataTypes.BIGINT)
+					.withColumn(COLUMNC2NAME, DataTypes.BLOB)
+					.withColumn(COLUMNIVNAME, DataTypes.BLOB).build();
 			session.execute(create);
 			
-			insert = QueryBuilder.insertInto(keyspaceName, TMPSTORAGE[i])
-					.value(COLUMNINDEXNAME, QueryBuilder.bindMarker())
-					.value(COLUMNC2NAME, QueryBuilder.bindMarker())
-					.value(COLUMNIVNAME, QueryBuilder.bindMarker());
+			insert = insertInto(keyspaceName, TMPSTORAGE[i])
+					.value(COLUMNINDEXNAME, bindMarker())
+					.value(COLUMNC2NAME, bindMarker())
+					.value(COLUMNIVNAME, bindMarker()).build();
 			preparedTmpInsert[i] = session.prepare(insert);
 		}
 				
@@ -529,7 +529,7 @@ public class DBStorage extends Index implements Storage {
 		session.execute("DROP TABLE IF EXISTS " + keyspaceName + "." + mainTableName + ";");
 	}
 	
-	public Session getSession(){
+	public CqlSession getSession(){
 		return session;
 	}
 	
@@ -614,15 +614,19 @@ public class DBStorage extends Index implements Storage {
 		for(int i = startindex; i < startindex+chunkSize; i++){
 			values.add(i);
 		}
-		Statement select = QueryBuilder.select(COLUMNC2NAME, COLUMNIVNAME)
-				.from(keyspaceName, TMPSTORAGE[tmpread])
-				.where(QueryBuilder.in(COLUMNINDEXNAME, values));
+		
+		List<Term> valueTerms= new ArrayList<Term>();
+		for(int val : values) valueTerms.add(literal(val));
+		
+		Relation rel1 = Relation.column(COLUMNINDEXNAME).in(tuple(valueTerms));
+		SimpleStatement select = selectFrom(keyspaceName, TMPSTORAGE[tmpread])
+				.columns(COLUMNC2NAME, COLUMNIVNAME).where(rel1).allowFiltering().build();
 		
 		ResultSet result = session.execute(select);
 		
 		for (Row row: result){
-			ByteBuffer c2 = row.getBytes(0);
-			ByteBuffer iv = row.getBytes(1);
+			ByteBuffer c2 = row.getByteBuffer(0);
+			ByteBuffer iv = row.getByteBuffer(1);
 			C2 newC2 = new C2(c2.array(), iv.array());
 			res.add(newC2);
 		}
@@ -668,15 +672,17 @@ public class DBStorage extends Index implements Storage {
 		
 		// do it all incrementally:
 		while(chunkElementCounter < chunkSize && currentLevel <= chunkLevel){
-			Select select = QueryBuilder.select(COLUMNC2NAME, COLUMNIVNAME)
-					.from(keyspaceName, mainTableName);
-			Statement where = select.where(QueryBuilder.eq(COLUMNLEVELNAME, currentLevel))  //load from current level
-					.and(QueryBuilder.gte(COLUMNLEVELPOSNAME, currentPosInLevel))			//everything greater than starting pos
-					.and(QueryBuilder.lt(COLUMNLEVELPOSNAME, currentPosInLevel+(chunkSize-chunkElementCounter)));			//and everything less than pos+size
-			for(Row r: session.execute(where)){
+			
+			Relation rel1 = Relation.column(COLUMNLEVELPOSNAME).isGreaterThanOrEqualTo(literal(currentPosInLevel));//everything greater than starting pos
+			Relation rel2 = Relation.column(COLUMNLEVELPOSNAME).isLessThan(literal(currentPosInLevel+(chunkSize-chunkElementCounter)));//and everything less than pos+size
+			Relation rel3 = Relation.column(COLUMNLEVELNAME).isEqualTo(literal(currentLevel));//load from current level
+			SimpleStatement select = selectFrom(keyspaceName, mainTableName)
+					.columns(COLUMNC2NAME, COLUMNIVNAME).where(rel1, rel2, rel3).allowFiltering().build();
+			
+			for(Row r: session.execute(select)){
 				chunkElementCounter++;
 				currentPosInLevel++;
-				res.add(new C2(r.getBytes(0).array(), r.getBytes(1).array())); // DB
+				res.add(new C2(r.getByteBuffer(0).array(), r.getByteBuffer(1).array())); // DB
 			}
 			
 			if(currentPosInLevel >= Math.pow(2, currentLevel) - 1 || currentPosInLevel == 0){ //level is exhausted or was empty

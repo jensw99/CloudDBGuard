@@ -6,8 +6,7 @@ import misc.Timer;
 
 import org.jdom2.Element;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import interfaces.SaveableInXMLElement;
 import enums.DatabaseType;

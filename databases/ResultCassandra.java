@@ -7,15 +7,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.hadoop.hbase.util.Bytes;
-
-import com.datastax.driver.core.ColumnDefinitions;
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
+import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.protocol.internal.ProtocolConstants.DataType;
 
 import misc.Misc;
-import misc.Timer;
 import enums.ColumnType;
 import enums.RequestType;
 
@@ -82,18 +79,16 @@ public class ResultCassandra extends Result{
 		
 		size = 0;
 		
-		if(!cassandraResults.isExhausted()){
-			
+		if (!isEmpty()) {
 			ColumnDefinitions definitions = cassandraResults.getColumnDefinitions();
 			
 			for(int i=0; i<definitions.size(); i++) {
-				
-				if(definitions.getType(i) == DataType.blob()) byteColumns.put(definitions.getName(i), new HashMap<byte[], byte[]>());
-				else if(definitions.getType(i) == DataType.varchar()) stringColumns.put(definitions.getName(i), new HashMap<byte[], String>());
-				else if(definitions.getType(i) == DataType.bigint()) intColumns.put(definitions.getName(i), new HashMap<byte[], Long>());
-				else if(definitions.getType(i).toString().equals(DataType.set(DataType.blob()).toString())) byteSetColumns.put(definitions.getName(i), new HashMap<byte[], Set<byte[]>>());
-				else if(definitions.getType(i).toString().equals(DataType.set(DataType.varchar()).toString())) stringSetColumns.put(definitions.getName(i), new HashMap<byte[], Set<String>>());
-				else if(definitions.getType(i).toString().equals(DataType.set(DataType.bigint()).toString())) intSetColumns.put(definitions.getName(i), new HashMap<byte[], Set<Long>>());
+				if(definitions.get(i).getType().getProtocolCode() == DataType.BLOB) byteColumns.put(definitions.get(i).getName().toString(), new HashMap<byte[], byte[]>());
+				else if(definitions.get(i).getType().getProtocolCode()  == DataType.VARCHAR) stringColumns.put(definitions.get(i).getName().toString(), new HashMap<byte[], String>());
+				else if(definitions.get(i).getType().getProtocolCode()  == DataType.BIGINT) intColumns.put(definitions.get(i).getName().toString(), new HashMap<byte[], Long>());
+				else if(definitions.get(i).getType().asCql(false, false).equalsIgnoreCase("set<blob>")) byteSetColumns.put(definitions.get(i).getName().toString(), new HashMap<byte[], Set<byte[]>>());
+				else if(definitions.get(i).getType().asCql(false, false).equalsIgnoreCase("set<text>")) stringSetColumns.put(definitions.get(i).getName().toString(), new HashMap<byte[], Set<String>>());
+				else if(definitions.get(i).getType().asCql(false, false).equalsIgnoreCase("set<bigint>")) intSetColumns.put(definitions.get(i).getName().toString(), new HashMap<byte[], Set<Long>>());
 				
 				
 			}
@@ -116,8 +111,8 @@ public class ResultCassandra extends Result{
 				byte[] rowkey = null;
 				
 				if((rowkeyType == ColumnType.BYTE)||(rowkeyColumnEncrypted)) {
-					byte[] tmp = new byte[row.getBytes(rowkeyColumnName).remaining()];
-					row.getBytes(rowkeyColumnName).get(tmp);
+					byte[] tmp = new byte[row.getByteBuffer(rowkeyColumnName).remaining()];
+					row.getByteBuffer(rowkeyColumnName).get(tmp);
 					rowkey = tmp;
 				}
 				else if((rowkeyType == ColumnType.STRING)&&(!rowkeyColumnEncrypted)) rowkey = row.getString(rowkeyColumnName).getBytes();
@@ -126,23 +121,21 @@ public class ResultCassandra extends Result{
 				
 				for(int i=0; i<definitions.size(); i++) {
 					
-					if(definitions.getType(i) == DataType.blob()) {
-						byte[] tmp = new byte[row.getBytes(definitions.getName(i)).remaining()];
-						row.getBytes(definitions.getName(i)).get(tmp);
-						byteColumns.get(definitions.getName(i)).put(rowkey, tmp);					
+					if(definitions.get(i).getType().getProtocolCode() == DataType.BLOB) {
+						byte[] tmp = new byte[row.getByteBuffer(definitions.get(i).getName()).remaining()];
+						row.getByteBuffer(definitions.get(i).getName().toString()).get(tmp);
+						byteColumns.get(definitions.get(i).getName().toString()).put(rowkey, tmp);					
 					}
-					else if(definitions.getType(i).toString().equals(DataType.set(DataType.blob()).toString())) byteSetColumns.get(definitions.getName(i)).put(rowkey, Misc.byteBufferHashSet2ByteHashSet(row.getSet(definitions.getName(i), ByteBuffer.class)));
-					else if(definitions.getType(i) == DataType.varchar()) stringColumns.get(definitions.getName(i)).put(rowkey, row.getString(definitions.getName(i)));
-					else if(definitions.getType(i) == DataType.bigint()) intColumns.get(definitions.getName(i)).put(rowkey, row.getLong(definitions.getName(i)));
-					else if(definitions.getType(i).toString().equals(DataType.set(DataType.varchar()).toString())) stringSetColumns.get(definitions.getName(i)).put(rowkey, row.getSet(definitions.getName(i),  String.class));
-					else if(definitions.getType(i).toString().equals(DataType.set(DataType.bigint()).toString())) intSetColumns.get(definitions.getName(i)).put(rowkey, row.getSet(definitions.getName(i),  Long.class));
+					else if(definitions.get(i).getType().asCql(false, false).equalsIgnoreCase("set<blob>")) byteSetColumns.get(definitions.get(i).getName().toString()).put(rowkey, Misc.byteBufferHashSet2ByteHashSet(row.getSet(definitions.get(i).getName().toString(), ByteBuffer.class)));
+					else if(definitions.get(i).getType().getProtocolCode() == DataType.VARCHAR) stringColumns.get(definitions.get(i).getName().toString()).put(rowkey, row.getString(definitions.get(i).getName().toString()));
+					else if(definitions.get(i).getType().getProtocolCode() == DataType.BIGINT) intColumns.get(definitions.get(i).getName().toString()).put(rowkey, row.getLong(definitions.get(i).getName().toString()));
+					else if(definitions.get(i).getType().asCql(false, false).equalsIgnoreCase("set<text>")) stringSetColumns.get(definitions.get(i).getName().toString()).put(rowkey, row.getSet(definitions.get(i).getName().toString(),  String.class));
+					else if(definitions.get(i).getType().asCql(false, false).equalsIgnoreCase("set<bigint>")) intSetColumns.get(definitions.get(i).getName().toString()).put(rowkey, row.getSet(definitions.get(i).getName().toString(),  Long.class));
 					
 											
 				}
 			}
 		}
-		
-		
 	}
 	
 	
@@ -174,7 +167,7 @@ public class ResultCassandra extends Result{
 		
 		ArrayList<Set<Long>> results = new ArrayList<Set<Long>>();
 				
-		if(!cassandraResults.isExhausted()){
+		if(!isEmpty()){
 			Iterator<Row> it = cassandraResults.iterator();
 			while(it.hasNext()) {
 				results.add(it.next().getSet(column, Long.class));					
@@ -297,7 +290,7 @@ public class ResultCassandra extends Result{
 		
 		if(column1 == null) column1 = id.getTable().getRowkeyColumnName();
 			
-		if(!cassandraResults.isExhausted()){
+		if(!isEmpty()){
 			Iterator<Row> it = cassandraResults.iterator();
 			while(it.hasNext()) {
 				Row tmp = it.next();
@@ -321,7 +314,7 @@ public class ResultCassandra extends Result{
 		
 		HashMap<String, Set<ByteBuffer>> results = new HashMap<String, Set<ByteBuffer>>();
 		
-		if(!cassandraResults.isExhausted()){
+		if(!isEmpty()){
 			Iterator<Row> it = cassandraResults.iterator();
 				
 			// iterate through the rows
@@ -360,11 +353,11 @@ public class ResultCassandra extends Result{
 		
 		System.out.println("Cassandra Results:");
 			
-		if(!cassandraResults.isExhausted()){
+		if(!isEmpty()){
 				
 			ColumnDefinitions definitions = cassandraResults.getColumnDefinitions();
 			
-			for(int i=0; i<definitions.size(); i++) System.out.print(Misc.makeLength(definitions.getName(i), 20) + "   ");
+			for(int i=0; i<definitions.size(); i++) System.out.print(Misc.makeLength(definitions.get(i).getName().toString(), 20) + "   ");
 			System.out.println();
 			
 			Iterator<Row> it = cassandraResults.iterator();
@@ -377,12 +370,12 @@ public class ResultCassandra extends Result{
 				if(rowsPrinted < rowsToPrint) {
 					for(int i=0; i<definitions.size(); i++) {
 					
-						if(definitions.getType(i) == DataType.varchar()) System.out.print(Misc.makeLength(row.getString(definitions.getName(i)), 20) + " | ");
-						if(definitions.getType(i) == DataType.bigint()) System.out.print(Misc.makeLength(String.valueOf(row.getLong(definitions.getName(i))), 20) + " | ");
-						if(definitions.getType(i) == DataType.blob()) {
+						if(definitions.get(i).getType().getProtocolCode() == DataType.VARCHAR) System.out.print(Misc.makeLength(row.getString(definitions.get(i).getName().toString()), 20) + " | ");
+						if(definitions.get(i).getType().getProtocolCode() == DataType.BIGINT) System.out.print(Misc.makeLength(String.valueOf(row.getLong(definitions.get(i).getName().toString())), 20) + " | ");
+						if(definitions.get(i).getType().getProtocolCode() == DataType.BLOB) {
 							
-							byte[] tmp = new byte[row.getBytes(definitions.getName(i)).remaining()];
-							row.getBytes(definitions.getName(i)).get(tmp);
+							byte[] tmp = new byte[row.getByteBuffer(definitions.get(i).getName().toString()).remaining()];
+							row.getByteBuffer(definitions.get(i).getName().toString()).get(tmp);
 							
 							System.out.print(Misc.makeLength(Misc.ByteArrayToString(tmp), 20) + " | ");
 						}
@@ -404,7 +397,7 @@ public class ResultCassandra extends Result{
 	@Override
 	public boolean isEmpty() {
 	
-		return cassandraResults.isExhausted();
+		return cassandraResults.iterator().hasNext();
 	}
 
 

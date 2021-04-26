@@ -2,9 +2,10 @@ package databases;
 
 import java.nio.ByteBuffer;
 import java.util.HashSet;
-import java.util.HashMap;
 
-import com.datastax.driver.core.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+
+import java.util.HashMap;
 
 import misc.Misc;
 import enums.RequestType;

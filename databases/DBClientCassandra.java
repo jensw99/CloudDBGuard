@@ -1,31 +1,33 @@
 package databases;
 
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.security.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Optional;
 
 import org.jdom2.Element;
+
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.DefaultConsistencyLevel;
+import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.metadata.Metadata;
+import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
+import com.datastax.oss.protocol.internal.ProtocolConstants.ConsistencyLevel;
 
 import misc.Misc;
 import misc.Timer;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Metadata;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.QueryOptions;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SimpleStatement;
-import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.exceptions.NoHostAvailableException;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 import enums.ColumnType;
 import enums.DatabaseType;
@@ -38,12 +40,9 @@ import enums.RequestType;
  *
  */
 public class DBClientCassandra extends DBClient {
-   
-	// reference to the connected Cassandra Cluster
-	private Cluster cluster;
 
 	// null indicates that there is currently no connection
-	private Session session;
+	private CqlSession session;
 	
 	private HashMap<String, PreparedStatement> preparedStatements;
 	
@@ -67,17 +66,12 @@ public class DBClientCassandra extends DBClient {
 	 */
 	public void connect() {
 		
-		cluster = Cluster.builder().addContactPoint(ip)/*.withQueryOptions(new QueryOptions().setFetchSize(100))*/.build();
-		
-		Metadata metadata = cluster.getMetadata();
-		Misc.printStatus("Connected to Cassandra cluster: " + metadata.getClusterName());
+		session = CqlSession.builder()
+			    .addContactPoint(new InetSocketAddress(ip, 9042))
+			    .withLocalDatacenter("datacenter1")
+			    .build();
+		Misc.printStatus("Connected to Cassandra cluster: " + session.getMetadata().getClusterName());
 		//for ( Host host : metadata.getAllHosts() ) System.out.printf("Datatacenter: %s; Host: %s; Rack: %s\n", host.getDatacenter(), host.getAddress(), host.getRack());
-		try {
-			session = cluster.connect();
-		}
-		catch(NoHostAvailableException e) {
-			System.out.println("No host available!");
-		}
 	}
 	
 	
@@ -86,7 +80,7 @@ public class DBClientCassandra extends DBClient {
 	 * gets the session of a connection
 	 * @return the session of a connection
 	 */
-	public Session getSession() {
+	public CqlSession getSession() {
 		
 		return session;
 	}
@@ -99,7 +93,7 @@ public class DBClientCassandra extends DBClient {
 	 */
 	public Metadata getMetadata() {
 		
-		return cluster.getMetadata();
+		return session.getMetadata();
 	}
 	
 	
@@ -108,12 +102,7 @@ public class DBClientCassandra extends DBClient {
 	 * Closes the connection to the Cassandra cluster
 	 */
 	public void close() {
-		if(session != null) {
-			session.close();
-			session = null;
-		}
-		
-		cluster.close();
+		session.close();
 	}
 
 	
@@ -130,10 +119,10 @@ public class DBClientCassandra extends DBClient {
 	@Override
 	public boolean cipherTableExists(DBLocation id) {
 		
-		KeyspaceMetadata ks = cluster.getMetadata().getKeyspace(id.getKeyspace().getCipherName());
-		if(ks == null) return false;
+		Optional<KeyspaceMetadata> ks = session.getMetadata().getKeyspace(id.getKeyspace().getCipherName());
+		if(!ks.isPresent()) return false;
 		else {
-			if(ks.getTable(id.getTable().getCipherName()) == null) return false;
+			if(ks.get().getTable(id.getTable().getCipherName()) == null) return false;
 			else return true;
 		}
 	}
@@ -148,8 +137,8 @@ public class DBClientCassandra extends DBClient {
 	@Override
 	public boolean cipherKeyspaceExists(DBLocation id) {
 		
-		KeyspaceMetadata ks = cluster.getMetadata().getKeyspace(id.getKeyspace().getCipherName());
-		if(ks == null) return false;
+		Optional<KeyspaceMetadata> ks = session.getMetadata().getKeyspace(id.getKeyspace().getCipherName());
+		if(!ks.isPresent()) return false;
 		else return true;	
 	}
 	
@@ -170,7 +159,7 @@ public class DBClientCassandra extends DBClient {
 		String query = "";
 		timer.reset();
 		
-		com.datastax.driver.core.ResultSet tmp;
+		ResultSet tmp;
 		
 		// we assume we only deal with keyspace and table names in cipher form, why else would we use TimDB?
 		// Table names are only given, when not creating or dropping a keyspace
@@ -337,26 +326,24 @@ public class DBClientCassandra extends DBClient {
 			query = query.substring(0, query.length()-1);
 			query += ");";
 			
-			
-			
 			// create bound statement
-			BoundStatement insertStatement = registerStatement(query, query).setConsistencyLevel(ConsistencyLevel.ONE).bind();
+			BoundStatement insertStatement = registerStatement(query, query).boundStatementBuilder().setConsistencyLevel(DefaultConsistencyLevel.fromCode(ConsistencyLevel.ONE)).build();
 			
 			// insert values
-			for(String s : currentRequest.getStringArgs().keySet()) insertStatement.setString(s, currentRequest.getStringArgs().get(s));
-			for(String s : currentRequest.getIntArgs().keySet()) insertStatement.setLong(s, currentRequest.getIntArgs().get(s));
-			for(String s : currentRequest.getByteArgs().keySet()) insertStatement.setBytes(s, ByteBuffer.wrap(currentRequest.getByteArgs().get(s)));
+			for(String s : currentRequest.getStringArgs().keySet()) insertStatement = insertStatement.setString(s, currentRequest.getStringArgs().get(s));
+			for(String s : currentRequest.getIntArgs().keySet()) insertStatement = insertStatement.setLong(s, currentRequest.getIntArgs().get(s));
+			for(String s : currentRequest.getByteArgs().keySet()) insertStatement = insertStatement.setByteBuffer(s, ByteBuffer.wrap(currentRequest.getByteArgs().get(s)));
 			for(String s : currentRequest.getTimestampStringArgs().keySet())
 				try {
-					insertStatement.setTimestamp(s, df.parse(currentRequest.getTimestampStringArgs().get(s)));
+					insertStatement.set(s, df.parse(currentRequest.getTimestampStringArgs().get(s)), Date.class);
 				} catch (ParseException e) {
 					e.printStackTrace();
 				}
 			
-			for(String s : currentRequest.getStringSets().keySet()) insertStatement.setSet(s, currentRequest.getStringSets().get(s));
-			for(String s : currentRequest.getIntSets().keySet()) insertStatement.setSet(s, currentRequest.getIntSets().get(s));
-			for(String s : currentRequest.getByteSets().keySet()) insertStatement.setSet(s, currentRequest.getByteSets().get(s));
-			for(String s : currentRequest.getTimestampStringSets().keySet()) insertStatement.setSet(s, currentRequest.getTimestampStringSets().get(s));
+			for(String s : currentRequest.getStringSets().keySet()) insertStatement.setSet(s, currentRequest.getStringSets().get(s), String.class);
+			for(String s : currentRequest.getIntSets().keySet()) insertStatement.setSet(s, currentRequest.getIntSets().get(s), Long.class);
+			for(String s : currentRequest.getByteSets().keySet()) insertStatement.setSet(s, currentRequest.getByteSets().get(s), ByteBuffer.class);
+			for(String s : currentRequest.getTimestampStringSets().keySet()) insertStatement.setSet(s, currentRequest.getTimestampStringSets().get(s), String.class);
 					
 			
 			// execute
@@ -627,7 +614,7 @@ public class DBClientCassandra extends DBClient {
 		
 		ResultSet result = session.execute(query);
 		
-		if(!result.isExhausted()){
+		if(result.iterator().hasNext()){
 			
 			Iterator<Row> it = result.iterator();
 			PreparedStatement updateQuery = registerStatement("upd000",
@@ -639,11 +626,11 @@ public class DBClientCassandra extends DBClient {
 			while(it.hasNext()) {
 				Row row = it.next();
 				
-				byte[] encryptedValue = new byte[row.getBytes(columnName).remaining()];
-				row.getBytes(columnName).get(encryptedValue);
+				byte[] encryptedValue = new byte[row.getByteBuffer(columnName).remaining()];
+				row.getByteBuffer(columnName).get(encryptedValue);
 				
-				byte[] iv = new byte[row.getBytes(table.getIVcolumnName()).remaining()];
-				row.getBytes(table.getIVcolumnName()).get(iv);
+				byte[] iv = new byte[row.getByteBuffer(table.getIVcolumnName()).remaining()];
+				row.getByteBuffer(table.getIVcolumnName()).get(iv);
 				
 				byte[] decryptedValue = cs.getRNDScheme().decrypt(encryptedValue, iv);
 				
@@ -668,8 +655,7 @@ public class DBClientCassandra extends DBClient {
 	@Override
 	public PreparedStatement registerStatement(String label, String query) {
 		
-		if(!preparedStatements.containsKey(label))
-			preparedStatements.put(label, session.prepare(query));
+		if(!preparedStatements.containsKey(label)) preparedStatements.put(label, session.prepare(query));
 		
 		return preparedStatements.get(label);
 		

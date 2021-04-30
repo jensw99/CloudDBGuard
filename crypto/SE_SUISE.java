@@ -50,6 +50,9 @@ public class SE_SUISE extends SEScheme{
 	// the plain location, that this scheme's instance encrypts
 	private DBLocation location;
 	
+	private byte[] keyK1;
+	
+	private byte[] keyK2;
 	
 	
 	
@@ -65,7 +68,10 @@ public class SE_SUISE extends SEScheme{
 		lambda = _lambda;	
 		location = _location;
 		
-		searchHistoryPath = "/Users/michaelbrenner/CloudDBGuard/tim/TimDB/SE_SUISE_omega";
+		keyK1 = ks.getKeyFor("SUISE_K1", lambda);
+		keyK2 = ks.getKeyFor("SUISE_K2", lambda);
+		
+		searchHistoryPath = "C:/Users/Jens/OneDrive/Uni/Bachelor_Uni_Frankfurt/Bachelorarbeit/Metadata/SE_SUISE_omega";
 		
 		f = new PRF();
 	    index = new SE_SUISE_Index(_db, _location);
@@ -121,9 +127,11 @@ public class SE_SUISE extends SEScheme{
 				
 		//Add(alpha_f, c, c_fett, gamma) 
 		add(alpha_f);
+		
+
 
 		//Enc(K, f);
-		return f.encryptString_AES_CBC(input, ks.getKeyFor("SUISE_K2", lambda));
+		return f.encryptString_AES_CBC(input, keyK2);
 	}
 	
 		
@@ -148,13 +156,14 @@ public class SE_SUISE extends SEScheme{
 		//create empty list x;
 		Vector<byte[]> x = new Vector<byte[]>();
 		
+		
 		for(String word: f_quer) {	
 			
 			byte[] s_i = g.generateRandomBytes(lambda);
 			//compute corresponding search token
 					
 			//byte[] r_w_i = f.encryptCBC(next.getBytes(), k1);
-			byte[] r_w_i = PRF.compute_SHA1(word.getBytes(), ks.getKeyFor("SUISE_K1", lambda));
+			byte[] r_w_i = PRF.compute_SHA1(word.getBytes(), keyK1);
 			
 			//if that search token was used before, add it to x
 			if(omega.contains(Misc.ByteArrayToString(r_w_i))) x.add(r_w_i);
@@ -224,7 +233,7 @@ public class SE_SUISE extends SEScheme{
 	 */
 	private byte[] searchToken(String searchword) {
 		
-		byte[] r_w = PRF.compute_SHA1(searchword.getBytes(), ks.getKeyFor("SUISE_K1", lambda));
+		byte[] r_w = PRF.compute_SHA1(searchword.getBytes(), keyK1);
 		
 		omega.add(r_w);
 		

@@ -122,8 +122,10 @@ public class DBClientCassandra extends DBClient {
 		Optional<KeyspaceMetadata> ks = session.getMetadata().getKeyspace(id.getKeyspace().getCipherName());
 		if(!ks.isPresent()) return false;
 		else {
-			if(ks.get().getTable(id.getTable().getCipherName()) == null) return false;
-			else return true;
+			if(!ks.get().getTable(id.getTable().getCipherName()).isPresent()) return false;
+			else {
+				return true;
+			}
 		}
 	}
 	

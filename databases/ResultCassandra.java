@@ -206,7 +206,6 @@ public class ResultCassandra extends Result{
 	 * rowkey is always returned as byte[]
 	 */
 	public HashMap<byte[], String> getKeyStringsFrom(String stringColumn) {
-		
 		return stringColumns.get(stringColumn.toLowerCase());		
 	}
 		
@@ -397,7 +396,7 @@ public class ResultCassandra extends Result{
 	@Override
 	public boolean isEmpty() {
 	
-		return cassandraResults.iterator().hasNext();
+		return !cassandraResults.iterator().hasNext();
 	}
 
 

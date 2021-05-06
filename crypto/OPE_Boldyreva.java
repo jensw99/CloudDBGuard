@@ -30,12 +30,14 @@ public class OPE_Boldyreva extends OPEScheme {
 	protected int pbits;
 	protected int cbits;
 	private byte[] aesk;
+	private byte[] keyBoldy;
+	
 	
 	// dictionary
 	private HashMap<BigInteger, BigInteger> dgap_cache = null;
 	
 	// path to dictionaries
-	private String meatadataPath = "/Users/michaelbrenner/CloudDBGuard/tim/TimDB/";
+	private String metaDataPath = "C:/Users/Jens/OneDrive/Uni/Bachelor_Uni_Frankfurt/Bachelorarbeit/Metadata/";
 			
 	// identifier of the currently open dictionary
 	String dictID = "";
@@ -54,7 +56,8 @@ public class OPE_Boldyreva extends OPEScheme {
 		
 		pbits = plainbits;
 		cbits = cipherbits;
-		aesk = aeskey(ks.getKeyFor("Boldy", 16).toString());
+		keyBoldy = ks.getKeyFor("Boldy", 16);
+		aesk = aeskey(keyBoldy.toString());
 		
 	}
 	
@@ -71,12 +74,12 @@ public class OPE_Boldyreva extends OPEScheme {
 			if(!dictID.equals("")) close();
 			
 			// if no dictionary exists, create one 
-			File file = new File(meatadataPath + db + " - " + id.getIdAsPath());
+			File file = new File(metaDataPath + db + " - " + id.getIdAsPath());
 			if(!file.exists()) { 				
 				dgap_cache = new HashMap<BigInteger, BigInteger>();		
 			}
 			// else read the existing dictionary from file
-			else dgap_cache = FileSystemHelper.readHashMapFromFile(meatadataPath + db + " - " + id.getIdAsPath());
+			else dgap_cache = FileSystemHelper.readHashMapFromFile(metaDataPath + db + " - " + id.getIdAsPath());
 			
 			// set current dictID as the just opened id path
 			dictID = id.getIdAsPath();
@@ -128,7 +131,7 @@ public class OPE_Boldyreva extends OPEScheme {
 		byte[] v = null;
 		try {
 			Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
-			SecretKeySpec secret_key = new SecretKeySpec(ks.getKeyFor("Boldy", 16), "HmacSHA256");
+			SecretKeySpec secret_key = new SecretKeySpec(keyBoldy, "HmacSHA256");
 			sha256_HMAC.init(secret_key);
 			String message = d_lo.toString() + "/" + d_hi.toString() + "/" + r_lo.toString() + "/" + r_hi.toString();
 			v = sha256_HMAC.doFinal(message.getBytes());

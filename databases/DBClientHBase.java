@@ -35,8 +35,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.jdom2.Element;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import enums.ColumnType;
 import enums.DatabaseType;

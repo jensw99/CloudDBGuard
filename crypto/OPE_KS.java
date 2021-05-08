@@ -10,11 +10,13 @@ import java.util.TreeMap;
 import org.jdom2.Element;
 
 import enums.ColumnType;
+import databases.ColumnState;
 import databases.DBClient;
 import databases.DBLocation;
 import databases.Request;
 import enums.RequestType;
 import databases.RowCondition;
+import databases.TableState;
 import misc.FileSystemHelper;
 import misc.Misc;
 
@@ -28,7 +30,7 @@ import misc.Misc;
 public class OPE_KS extends OPEScheme {
 	
 	// path to dictionaries
-	private String meatadataPath = "/Users/michaelbrenner/CloudDBGuard/tim/TimDB/";
+	private String metaDataPath= "C:/Users/Jens/OneDrive/Uni/Bachelor_Uni_Frankfurt/Bachelorarbeit/Metadata/enron";
 	
 	// underlying dictionary
 	private TreeMap<Long, Long> mainDict = null;	
@@ -91,7 +93,7 @@ public class OPE_KS extends OPEScheme {
 			if(!dictID.equals("")) close();
 			
 			// if no dictionary exists, create one and save it
-			File file = new File(meatadataPath + " - " + id.getIdAsPath());
+			File file = new File(metaDataPath + " - " + id.getIdAsPath());
 			// TODO !!! for benchmark purposes always create a new dict, comment that back in for non benchmark usage
 			if(!file.exists()) { 
 							
@@ -101,7 +103,7 @@ public class OPE_KS extends OPEScheme {
 				mainDict.put(domainMinimum, rangeMinimum); // makes the domain minimal smaller than the range, so
 				mainDict.put(domainMaximum, rangeMaximum); // min/max value don't get mapped to the same 'ciphertext'
 			}
-			else mainDict = FileSystemHelper.readTreeMapFromFile(meatadataPath + " - " + id.getIdAsPath());
+			else mainDict = FileSystemHelper.readTreeMapFromFile(metaDataPath + " - " + id.getIdAsPath());
 			
 			// set current dictID as the just opened id path
 			dictID = id.getIdAsPath();
@@ -162,16 +164,25 @@ public class OPE_KS extends OPEScheme {
 		
 		// put in the keys in optimal order
 		for(int i=0; i<optimalOrderedKeys.length; i++) addValue(newDict, optimalOrderedKeys[i], id);
-		
 		// update the database
 		
+		// 0. Remove RND Layer
+		ColumnState cs = id.getTable().getColumnByPlainName(id.getColumns().get(0));
+		db.removeRNDLayer(cs, "OPE");
+		
+		ArrayList<String> columns = new ArrayList<String>();
+		columns.add(cs.getCOPEname());
+		
 		// 1. Read the entire Column
-		Request readRequest = new Request(RequestType.READ, new DBLocation(id.getKeyspace(), id.getTable(), null, id.getColumns()));
-		HashMap<byte[], byte[]> old_raw = db.processRequest(readRequest).getKeyBytesFrom(id.getColumns().get(0)); // OPE column is a byte column
+		Request readRequest = new Request(RequestType.READ, new DBLocation(id.getKeyspace(), id.getTable(), null, columns));
+		HashMap<byte[], byte[]> old_raw = db.processRequest(readRequest).getKeyBytesFrom(cs.getCOPEname()); // OPE column is a byte column
+		
 		
 		// 1.5 recover the Long values
 		HashMap<byte[], Long> old = new HashMap<byte[], Long>();
-		for(byte[] key : old_raw.keySet()) old.put(key, Misc.bytesToLong(old_raw.get(key)));
+		for(byte[] key : old_raw.keySet()) {
+			old.put(key, Misc.bytesToLong(old_raw.get(key)));
+		}
 		
 		// 2 create a inverted lookup table to find 
 		HashMap<Long, Long> revMainDict = buildReverseMainDict();
@@ -182,12 +193,17 @@ public class OPE_KS extends OPEScheme {
 			ColumnType rowkeyColumnType = id.getTable().getRowkeyColumn().getType();
 			
 			ArrayList<RowCondition> tmpRC = new ArrayList<RowCondition>();
-			if(rowkeyColumnType == ColumnType.STRING) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", Misc.ByteArrayToCharString(rowkey), 0, null, rowkeyColumnType)); 
-			if(rowkeyColumnType == ColumnType.INTEGER) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, Misc.bytesToLong(rowkey), null, rowkeyColumnType)); 
-			if(rowkeyColumnType == ColumnType.BYTE) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, 0, rowkey, rowkeyColumnType)); 
+			if(cs.isEncrypted()) {
+				tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, 0, rowkey, ColumnType.BYTE));
+			}else {
+				if(rowkeyColumnType == ColumnType.STRING) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", Misc.ByteArrayToCharString(rowkey), 0, null, rowkeyColumnType)); 
+				if(rowkeyColumnType == ColumnType.INTEGER) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, Misc.bytesToLong(rowkey), null, rowkeyColumnType)); 
+				if(rowkeyColumnType == ColumnType.BYTE) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, 0, rowkey, rowkeyColumnType)); 
+			}
+			
 			
 			Request updateRequest = new Request(RequestType.UPDATE_VALUE, new DBLocation(id.getKeyspace(), id.getTable(), tmpRC, null));
-			updateRequest.getByteArgs().put(id.getColumns().get(0), Misc.longToBytes(newDict.get(revMainDict.get(old.get(rowkey)))));
+			updateRequest.getByteArgs().put(cs.getCOPEname(), Misc.longToBytes(newDict.get(revMainDict.get(old.get(rowkey)))));
 					
 			db.processRequest(updateRequest);
 		}
@@ -298,10 +314,10 @@ public class OPE_KS extends OPEScheme {
 		
 		if(mainDict != null) { // which means the scheme was actually used
 			try {
-				FileSystemHelper.writeTreeMapToFile(mainDict, meatadataPath + " - " + dictID);
+				FileSystemHelper.writeTreeMapToFile(mainDict, metaDataPath + " - " + dictID);
 			} catch (IOException e) {
 				e.printStackTrace();
-				System.out.println("Error while saving " + meatadataPath + " - " + dictID);
+				System.out.println("Error while saving " + metaDataPath + " - " + dictID);
 			}
 		}
 	}

@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.security.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.metadata.Metadata;
 import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
 import com.datastax.oss.protocol.internal.ProtocolConstants.ConsistencyLevel;
@@ -409,8 +411,12 @@ public class DBClientCassandra extends DBClient {
 				
 			
 				System.out.println(query);
+				
+				// For a higher timeout
+				SimpleStatement sstmt = SimpleStatement.newInstance(query).setTimeout(Duration.ofSeconds(8));
+				
 				timer.start();
-				tmp = session.execute(query);
+				tmp = session.execute(sstmt);
 				timer.stop();
 				
 				return new ResultCassandra(currentRequest, tmp, timer.getRuntime());
@@ -526,7 +532,7 @@ public class DBClientCassandra extends DBClient {
 		case UPDATE_VALUE:
 			
 			// compose update query
-			query = "UPDATE " + currentRequest.getId().getKeyspace() + "." + currentRequest.getId().getTable() + " SET ";// + r.getId().getColumns()[0] + " = ";
+			query = "UPDATE " + currentRequest.getId().getKeyspace().getCipherName() + "." + currentRequest.getId().getTable().getCipherName() + " SET ";// + r.getId().getColumns()[0] + " = ";
 					
 			String tmp_key = null;
 			
@@ -535,19 +541,25 @@ public class DBClientCassandra extends DBClient {
 				query += tmp_key + " = '" + currentRequest.getStringArgs().get(tmp_key) + "'";
 			}
 			else if(!currentRequest.getIntArgs().isEmpty()) {
-				tmp_key = currentRequest.getStringArgs().keySet().iterator().next();
+				tmp_key = currentRequest.getIntArgs().keySet().iterator().next();
 				query += tmp_key + " = " + currentRequest.getIntArgs().get(tmp_key);
 			}
 			else if(!currentRequest.getByteArgs().isEmpty()) {
-				tmp_key = currentRequest.getStringArgs().keySet().iterator().next();
-				query += tmp_key + " = '" + currentRequest.getByteArgs().get(tmp_key) + "'";
+				tmp_key = currentRequest.getByteArgs().keySet().iterator().next();
+				query += tmp_key + " = ?";
 			}
 			else if(!currentRequest.getTimestampStringArgs().isEmpty()) {
-				tmp_key = currentRequest.getStringArgs().keySet().iterator().next();
+				tmp_key = currentRequest.getTimestampStringArgs().keySet().iterator().next();
 				query += tmp_key + " = '" + currentRequest.getTimestampStringArgs().get(tmp_key) + "'";
 			}
 			
-			if(!currentRequest.getId().getRowConditions().isEmpty()) query += " WHERE " + currentRequest.getId().getRowConditions().get(0).getConditionAsString();
+			if(!currentRequest.getId().getRowConditions().isEmpty()) {
+				if (currentRequest.getId().getRowConditions().get(0).getType() == ColumnType.BYTE) {
+					query += " WHERE " + currentRequest.getId().getRowConditions().get(0).getColumnName() + " = ?";
+				}else {
+					query += " WHERE " + currentRequest.getId().getRowConditions().get(0).getConditionAsString();
+				}	
+			}
 			
 			if(currentRequest.getId().getRowConditions().size() > 1) {
 				for(int i=1; i<currentRequest.getId().getRowConditions().size(); i++) {
@@ -556,11 +568,24 @@ public class DBClientCassandra extends DBClient {
 				}
 			}
 			
-			query += ";";	
+			query += ";";
+			
+			BoundStatement bs = registerStatement(query, query).bind();
+			
+			if(!currentRequest.getByteArgs().isEmpty()) {
+				tmp_key = currentRequest.getByteArgs().keySet().iterator().next();
+				bs = bs.setByteBuffer(tmp_key, ByteBuffer.wrap(currentRequest.getByteArgs().get(tmp_key)));
+			}
+			if(!currentRequest.getId().getRowConditions().isEmpty()) {
+				if (currentRequest.getId().getRowConditions().get(0).getType() == ColumnType.BYTE) {
+					bs = bs.setByteBuffer(currentRequest.getId().getRowConditions().get(0).getColumnName(), ByteBuffer.wrap(currentRequest.getId().getRowConditions().get(0).getByteTerm()));
+				}
+			}
 						
 			// update
 			timer.start();
-			tmp = session.execute(query);
+			// System.out.println(query);
+			tmp = session.execute(bs);
 			timer.stop();
 			
 			return new ResultCassandra(currentRequest, tmp, timer.getRuntime());
@@ -591,6 +616,9 @@ public class DBClientCassandra extends DBClient {
 	 */
 	public void removeRNDLayer(ColumnState cs, String onion) {
 		
+		if(onion.equals("OPE") && cs.isRNDoverOPEStrippedOff() == true) return;
+		if(onion.equals("DET") && cs.isRNDoverDETStrippedOff() == true) return;
+		
 		Timer t = new Timer();
 		t.start();
 		
@@ -619,10 +647,10 @@ public class DBClientCassandra extends DBClient {
 		if(result.iterator().hasNext()){
 			
 			Iterator<Row> it = result.iterator();
-			PreparedStatement updateQuery = registerStatement("upd000",
-					"UPDATE " + table.getKeyspace().getCipherName() + "." + table.getCipherName() + " " + 
+			query = "UPDATE " + table.getKeyspace().getCipherName() + "." + table.getCipherName() + " " + 
 				    "SET " + columnName + "=? " +
-					"WHERE " + rowkeyColumnName + "=?;");
+					"WHERE " + rowkeyColumnName + "=?;";
+			PreparedStatement updateQuery = registerStatement(query, query);
 			
 			// für alle rows
 			while(it.hasNext()) {
@@ -636,9 +664,15 @@ public class DBClientCassandra extends DBClient {
 				
 				byte[] decryptedValue = cs.getRNDScheme().decrypt(encryptedValue, iv);
 				
-				//System.out.println("Row updated with: " + Misc.bytesToLong(decryptedValue));
+				// System.out.println("1. Row updated with: " + Misc.bytesToLong(decryptedValue));
 				
-				BoundStatement updateQueryStatement = updateQuery.bind(ByteBuffer.wrap(decryptedValue), row.getObject(rowkeyColumnName));
+				
+				BoundStatement updateQueryStatement = updateQuery.bind();
+				updateQueryStatement = updateQueryStatement.setByteBuffer(columnName, ByteBuffer.wrap(decryptedValue));
+				updateQueryStatement = updateQueryStatement.setByteBuffer(rowkeyColumnName, row.getByteBuffer(rowkeyColumnName));
+		
+				
+				
 				session.execute(updateQueryStatement);		
 			}
 			

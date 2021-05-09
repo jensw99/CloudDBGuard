@@ -190,17 +190,10 @@ public class OPE_KS extends OPEScheme {
 		for(byte[] rowkey : old.keySet()) {
 			
 			// 3. update the old value with newDict(k, value)
-			ColumnType rowkeyColumnType = id.getTable().getRowkeyColumn().getType();
 			
 			ArrayList<RowCondition> tmpRC = new ArrayList<RowCondition>();
-			if(cs.isEncrypted()) {
-				tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, 0, rowkey, ColumnType.BYTE));
-			}else {
-				if(rowkeyColumnType == ColumnType.STRING) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", Misc.ByteArrayToCharString(rowkey), 0, null, rowkeyColumnType)); 
-				if(rowkeyColumnType == ColumnType.INTEGER) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, Misc.bytesToLong(rowkey), null, rowkeyColumnType)); 
-				if(rowkeyColumnType == ColumnType.BYTE) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, 0, rowkey, rowkeyColumnType)); 
-			}
-			
+			tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, 0, rowkey, ColumnType.BYTE));
+		
 			
 			Request updateRequest = new Request(RequestType.UPDATE_VALUE, new DBLocation(id.getKeyspace(), id.getTable(), tmpRC, null));
 			updateRequest.getByteArgs().put(cs.getCOPEname(), Misc.longToBytes(newDict.get(revMainDict.get(old.get(rowkey)))));

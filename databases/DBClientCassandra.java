@@ -546,7 +546,7 @@ public class DBClientCassandra extends DBClient {
 			}
 			else if(!currentRequest.getByteArgs().isEmpty()) {
 				tmp_key = currentRequest.getByteArgs().keySet().iterator().next();
-				query += tmp_key + " = ?";
+				query += tmp_key + " = "+ Misc.bytesToCQLHexString(currentRequest.getByteArgs().get(tmp_key));
 			}
 			else if(!currentRequest.getTimestampStringArgs().isEmpty()) {
 				tmp_key = currentRequest.getTimestampStringArgs().keySet().iterator().next();
@@ -554,38 +554,21 @@ public class DBClientCassandra extends DBClient {
 			}
 			
 			if(!currentRequest.getId().getRowConditions().isEmpty()) {
-				if (currentRequest.getId().getRowConditions().get(0).getType() == ColumnType.BYTE) {
-					query += " WHERE " + currentRequest.getId().getRowConditions().get(0).getColumnName() + " = ?";
-				}else {
-					query += " WHERE " + currentRequest.getId().getRowConditions().get(0).getConditionAsString();
-				}	
+				query += " WHERE " + currentRequest.getId().getRowConditions().get(0).getConditionAsString();
 			}
 			
 			if(currentRequest.getId().getRowConditions().size() > 1) {
 				for(int i=1; i<currentRequest.getId().getRowConditions().size(); i++) {
-					
 					query += " AND " + currentRequest.getId().getRowConditions().get(i).getConditionAsString();
 				}
 			}
 			
 			query += ";";
-			
-			BoundStatement bs = registerStatement(query, query).bind();
-			
-			if(!currentRequest.getByteArgs().isEmpty()) {
-				tmp_key = currentRequest.getByteArgs().keySet().iterator().next();
-				bs = bs.setByteBuffer(tmp_key, ByteBuffer.wrap(currentRequest.getByteArgs().get(tmp_key)));
-			}
-			if(!currentRequest.getId().getRowConditions().isEmpty()) {
-				if (currentRequest.getId().getRowConditions().get(0).getType() == ColumnType.BYTE) {
-					bs = bs.setByteBuffer(currentRequest.getId().getRowConditions().get(0).getColumnName(), ByteBuffer.wrap(currentRequest.getId().getRowConditions().get(0).getByteTerm()));
-				}
-			}
 						
 			// update
 			timer.start();
 			// System.out.println(query);
-			tmp = session.execute(bs);
+			tmp = session.execute(query);
 			timer.stop();
 			
 			return new ResultCassandra(currentRequest, tmp, timer.getRuntime());

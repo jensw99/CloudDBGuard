@@ -641,7 +641,7 @@ public class DBClientCassandra extends DBClient {
 			while(it.hasNext()) {
 				Row row = it.next();
 				
-				if(cs.getType() == ColumnType.STRING_SET) {
+				if(cs.getType() == ColumnType.STRING_SET||cs.getType() == ColumnType.BYTE_SET||cs.getType() == ColumnType.INTEGER_SET) {
 					
 					byte[] iv = new byte[row.getByteBuffer(table.getIVcolumnName()).remaining()];
 					row.getByteBuffer(table.getIVcolumnName()).get(iv);
@@ -649,20 +649,6 @@ public class DBClientCassandra extends DBClient {
 					HashSet<ByteBuffer> bbSet = new HashSet<ByteBuffer>();
 					for (ByteBuffer bb : row.getSet(columnName, ByteBuffer.class)) bbSet.add(bb);
 					HashSet<ByteBuffer> decryptedValues = Misc.byteHashSet2ByteBufferHashSet(cs.getRNDScheme().decryptByteSet(Misc.byteBufferHashSet2ByteHashSet(bbSet), iv));
-					
-					
-					/*
-					for (ByteBuffer bb : row.getSet(columnName, ByteBuffer.class)) {
-						byte[] encryptedValue = new byte[bb.remaining()];
-						bb.get(encryptedValue);
-						System.out.println(Misc.bytesToCQLHexString(encryptedValue));
-						decryptedValues.add(ByteBuffer.wrap(cs.getRNDScheme().decrypt(encryptedValue, iv)));
-						if(cs.getRNDScheme().decrypt(encryptedValue, iv).length > max) max = cs.getRNDScheme().decrypt(encryptedValue, iv).length;
-						// System.out.println();
-						System.out.println(Misc.bytesToCQLHexString(cs.getRNDScheme().decrypt(encryptedValue, iv)));
-						//System.out.println(Misc.ByteArrayToCharString(cs.getDETScheme().decrypt(cs.getRNDScheme().decrypt(encryptedValue, iv))));
-					}*/
-					
 					
 					BoundStatement updateQueryStatement = updateQuery.bind();
 					updateQueryStatement = updateQueryStatement.setSet(columnName, decryptedValues, ByteBuffer.class);

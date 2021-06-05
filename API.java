@@ -392,7 +392,7 @@ class API {
 							}
 						
 							if(cs.getType() == ColumnType.INTEGER_SET) {
-								createRequest.getByteArgs().put(cs.getCRNDname(), "set".getBytes());						
+								createRequest.getByteArgs().put(cs.getCDETname(), "set".getBytes());						
 							}
 						
 							if(cs.getType() == ColumnType.BYTE) {
@@ -400,7 +400,7 @@ class API {
 							}
 						
 							if(cs.getType() == ColumnType.BYTE_SET) {
-								createRequest.getByteArgs().put(cs.getCRNDname(), "set".getBytes());								
+								createRequest.getByteArgs().put(cs.getCDETname(), "set".getBytes());								
 							}
 						}
 					}
@@ -751,7 +751,7 @@ class API {
 								
 								// RND column
 								if(!cs.isRNDoverDETStrippedOff()) insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDDETValue));	
-								else insertRequest.getByteSets().put(cs.getCRNDname(), Misc.byteHashSet2ByteBufferHashSet(encryptedDETValue));		
+								else insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedDETValue));		
 							}
 							else { //unencrypted								
 								insertRequest.getByteSets().put(cs.getPlainName(), value);								

@@ -63,9 +63,17 @@ public class ByteSetColumnDecrypter implements Callable<HashMap<byte[], Set<byte
 		
 		// create new HashMap for decrypted Values
 		HashMap<byte[], Set<byte[]>> decryptedValues = new HashMap<byte[], Set<byte[]>>();
-					
-		for(byte[] key : rowkeysForDecryption) 
-			decryptedValues.put(key, column.getDETScheme().decryptByteSet(encryptedValues.get(key)));	
+		if(column.isRNDoverDETStrippedOff())			
+			for(byte[] key : rowkeysForDecryption) 
+				decryptedValues.put(key, column.getDETScheme().decryptByteSet(encryptedValues.get(key)));	
+		else
+			for(byte[] key : rowkeysForDecryption) 
+				decryptedValues.put(
+						key, 
+						column.getDETScheme().decryptByteSet(
+								column.getRNDScheme().decryptByteSet(encryptedValues.get(key), IVs.get(key))
+								)
+						);
 		
 		return decryptedValues;
 				

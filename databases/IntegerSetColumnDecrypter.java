@@ -63,9 +63,19 @@ public class IntegerSetColumnDecrypter implements Callable<HashMap<byte[], Set<L
 		
 		// create new HashMap for decrypted Values
 		HashMap<byte[], Set<Long>> decryptedValues = new HashMap<byte[], Set<Long>>();
-					
-		for(byte[] key : rowkeysForDecryption) 
-			decryptedValues.put(key, Misc.byteArraySetToLongSet(column.getDETScheme().decryptByteSet(encryptedValues.get(key))));	
+		if(column.isRNDoverDETStrippedOff())				
+			for(byte[] key : rowkeysForDecryption) 
+				decryptedValues.put(key, Misc.byteArraySetToLongSet(column.getDETScheme().decryptByteSet(encryptedValues.get(key))));
+		else
+			for(byte[] key : rowkeysForDecryption) 
+				decryptedValues.put(
+						key, 
+						Misc.byteArraySetToLongSet(
+								column.getDETScheme().decryptByteSet(
+										column.getRNDScheme().decryptByteSet(encryptedValues.get(key), IVs.get(key))
+										)
+								) 
+						);
 	
 		return decryptedValues;
 				

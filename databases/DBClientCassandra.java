@@ -9,8 +9,10 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.Set;
 
 import org.jdom2.Element;
 
@@ -344,10 +346,10 @@ public class DBClientCassandra extends DBClient {
 					e.printStackTrace();
 				}
 			
-			for(String s : currentRequest.getStringSets().keySet()) insertStatement.setSet(s, currentRequest.getStringSets().get(s), String.class);
-			for(String s : currentRequest.getIntSets().keySet()) insertStatement.setSet(s, currentRequest.getIntSets().get(s), Long.class);
-			for(String s : currentRequest.getByteSets().keySet()) insertStatement.setSet(s, currentRequest.getByteSets().get(s), ByteBuffer.class);
-			for(String s : currentRequest.getTimestampStringSets().keySet()) insertStatement.setSet(s, currentRequest.getTimestampStringSets().get(s), String.class);
+			for(String s : currentRequest.getStringSets().keySet()) insertStatement = insertStatement.setSet(s, currentRequest.getStringSets().get(s), String.class);
+			for(String s : currentRequest.getIntSets().keySet()) insertStatement = insertStatement.setSet(s, currentRequest.getIntSets().get(s), Long.class);
+			for(String s : currentRequest.getByteSets().keySet()) insertStatement = insertStatement.setSet(s, currentRequest.getByteSets().get(s), ByteBuffer.class);
+			for(String s : currentRequest.getTimestampStringSets().keySet()) insertStatement = insertStatement.setSet(s, currentRequest.getTimestampStringSets().get(s), String.class);
 					
 			
 			// execute
@@ -365,7 +367,6 @@ public class DBClientCassandra extends DBClient {
 				return null;
 			}
 			else {
-				
 				// compose query
 				query = "SELECT ";
 			
@@ -626,7 +627,6 @@ public class DBClientCassandra extends DBClient {
 		// TODO: this has to be rewritten for larger tables, no time for that
 		
 		ResultSet result = session.execute(query);
-		
 		if(result.iterator().hasNext()){
 			
 			Iterator<Row> it = result.iterator();
@@ -635,28 +635,62 @@ public class DBClientCassandra extends DBClient {
 					"WHERE " + rowkeyColumnName + "=?;";
 			PreparedStatement updateQuery = registerStatement(query, query);
 			
+			
+			
 			// für alle rows
 			while(it.hasNext()) {
 				Row row = it.next();
 				
-				byte[] encryptedValue = new byte[row.getByteBuffer(columnName).remaining()];
-				row.getByteBuffer(columnName).get(encryptedValue);
-				
-				byte[] iv = new byte[row.getByteBuffer(table.getIVcolumnName()).remaining()];
-				row.getByteBuffer(table.getIVcolumnName()).get(iv);
-				
-				byte[] decryptedValue = cs.getRNDScheme().decrypt(encryptedValue, iv);
-				
-				// System.out.println("1. Row updated with: " + Misc.bytesToLong(decryptedValue));
-				
-				
-				BoundStatement updateQueryStatement = updateQuery.bind();
-				updateQueryStatement = updateQueryStatement.setByteBuffer(columnName, ByteBuffer.wrap(decryptedValue));
-				updateQueryStatement = updateQueryStatement.setByteBuffer(rowkeyColumnName, row.getByteBuffer(rowkeyColumnName));
-		
-				
-				
-				session.execute(updateQueryStatement);		
+				if(cs.getType() == ColumnType.STRING_SET) {
+					
+					byte[] iv = new byte[row.getByteBuffer(table.getIVcolumnName()).remaining()];
+					row.getByteBuffer(table.getIVcolumnName()).get(iv);
+					
+					HashSet<ByteBuffer> bbSet = new HashSet<ByteBuffer>();
+					for (ByteBuffer bb : row.getSet(columnName, ByteBuffer.class)) bbSet.add(bb);
+					HashSet<ByteBuffer> decryptedValues = Misc.byteHashSet2ByteBufferHashSet(cs.getRNDScheme().decryptByteSet(Misc.byteBufferHashSet2ByteHashSet(bbSet), iv));
+					
+					
+					/*
+					for (ByteBuffer bb : row.getSet(columnName, ByteBuffer.class)) {
+						byte[] encryptedValue = new byte[bb.remaining()];
+						bb.get(encryptedValue);
+						System.out.println(Misc.bytesToCQLHexString(encryptedValue));
+						decryptedValues.add(ByteBuffer.wrap(cs.getRNDScheme().decrypt(encryptedValue, iv)));
+						if(cs.getRNDScheme().decrypt(encryptedValue, iv).length > max) max = cs.getRNDScheme().decrypt(encryptedValue, iv).length;
+						// System.out.println();
+						System.out.println(Misc.bytesToCQLHexString(cs.getRNDScheme().decrypt(encryptedValue, iv)));
+						//System.out.println(Misc.ByteArrayToCharString(cs.getDETScheme().decrypt(cs.getRNDScheme().decrypt(encryptedValue, iv))));
+					}*/
+					
+					
+					BoundStatement updateQueryStatement = updateQuery.bind();
+					updateQueryStatement = updateQueryStatement.setSet(columnName, decryptedValues, ByteBuffer.class);
+					updateQueryStatement = updateQueryStatement.setByteBuffer(rowkeyColumnName, row.getByteBuffer(rowkeyColumnName));
+					
+					session.execute(updateQueryStatement);
+					
+				}else {
+					byte[] encryptedValue = new byte[row.getByteBuffer(columnName).remaining()];
+					
+					row.getByteBuffer(columnName).get(encryptedValue);
+					
+					byte[] iv = new byte[row.getByteBuffer(table.getIVcolumnName()).remaining()];
+					row.getByteBuffer(table.getIVcolumnName()).get(iv);
+					
+					byte[] decryptedValue = cs.getRNDScheme().decrypt(encryptedValue, iv);
+					// System.out.println("1. Row before: " + Misc.bytesToCQLHexString(ecryptedValue));
+					// System.out.println("2. Row updated with: " + Misc.bytesToCQLHexString(decryptedValue));
+					
+					
+					BoundStatement updateQueryStatement = updateQuery.bind();
+					updateQueryStatement = updateQueryStatement.setByteBuffer(columnName, ByteBuffer.wrap(decryptedValue));
+					updateQueryStatement = updateQueryStatement.setByteBuffer(rowkeyColumnName, row.getByteBuffer(rowkeyColumnName));
+			
+					
+					
+					session.execute(updateQueryStatement);	
+				}	
 			}
 			
 		}

@@ -2,6 +2,7 @@ package crypto;
 
 import java.nio.ByteBuffer;
 import java.util.HashSet;
+import java.util.Set;
 
 import databases.DBClient;
 import databases.DBLocation;
@@ -44,18 +45,27 @@ public abstract class DETScheme extends EncryptionScheme {
 	 * @param id the destination within the database
 	 * @return the encrypted input set
 	 */
-	public HashSet<ByteBuffer> encryptByteSet(HashSet<ByteBuffer> input, DBLocation id) {
+	public HashSet<byte[]> encryptByteSet(HashSet<byte[]> input) {
 		
-		HashSet<ByteBuffer> result = new HashSet<ByteBuffer>();		
-		for (ByteBuffer bb : input) {
-			
-			byte[] b = new byte[bb.remaining()];
-			bb.get(b);
-			
-			result.add(ByteBuffer.wrap(encrypt(b)));
-		}
+		HashSet<byte[]> result = new HashSet<byte[]>();		
+		for (byte[] b : input) result.add(encrypt(b));
+
 		return result;
 	};
+	
+	
+	/**
+	 * Decrypts a set of values by decrypting every value separately
+	 * @param input the input set
+	 * @return the decrypted input set
+	 */
+	public HashSet<byte[]> decryptByteSet(Set<byte[]> input) {
+		
+		HashSet<byte[]> result = new HashSet<byte[]>();		
+		for (byte[] b : input) result.add(encrypt(b));
+
+		return result;
+	}
 	
 	
 	/**

@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collections;
 //import java.util.Collections;
 //import java.util.HashMap;
 import java.util.HashSet;
@@ -503,6 +504,48 @@ public class Misc {
 		if(s.length() > 3) result += s_array[3];
 		
 		return result;
+	}
+	
+	
+	/**
+	 * converts a string into a long hashset value
+	 * @param the input string
+	 * @return the long hashset value that represents the string
+	 */
+	public static ArrayList<Long> stringToLongArrayList(String s) {
+		
+		ArrayList<Long> result = new ArrayList<Long>();
+		
+		for (int i = 4; i<s.length(); i += 4) {
+			result.add(Misc.stringToLong(s.substring(i-4, i)));
+		}
+		
+		if(s.length() % 4 == 1) result.add(Misc.stringToLong(s.substring(s.length()-1)));
+		if(s.length() % 4 == 2) result.add(Misc.stringToLong(s.substring(s.length()-2)));
+		if(s.length() % 4 == 3) result.add(Misc.stringToLong(s.substring(s.length()-3)));
+		
+		return result;
+	}
+	
+	/**
+	 * converts a long arraylist to a byte array
+	 * @param the input long arraylist
+	 * @return the byte array value that represents the long arraylist
+	 */
+	public static byte[] longArrayListToByteArray(ArrayList<Long> longArrayList) {
+		byte[] b = new byte[longArrayList.size()*8];
+		
+		int counter = 0;
+		for(long l : longArrayList) {
+			byte[] longToBytes = Misc.longToBytes(l);
+			for (byte longByte : longToBytes) {
+				b[counter] = longByte;
+				counter++;
+			}
+		}
+		
+		
+		return b;
 	}
 	
 	

@@ -382,7 +382,7 @@ class API {
 							}
 						
 							if(cs.getType() == ColumnType.STRING_SET) {
-								createRequest.getByteArgs().put(cs.getCRNDname(), "set".getBytes());
+								createRequest.getByteArgs().put(cs.getCDETname(), "set".getBytes());
 								createRequest.getStringArgs().put(cs.getCSEname(), "set");
 							}
 						
@@ -571,7 +571,10 @@ class API {
 								tmpOPEColumns.add(cs.getPlainName()); // Plain column name for the client side index
 								
 								String encryptedSEValue  = cs.getSEScheme() .encrypt(      value , new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpSEColumns));
-								byte[] encryptedOPEValue = cs.getOPEScheme().encryptString(value , new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpOPEColumns));   // veralteter Kommentar: bei OPE können die Plain IDs benutzt werden, da deren Indexe eh nur auf dem Client liegen, ist auch wichtig, damit rowkey spalten auf verschiedenen Datenbanken den gleichen Index benutzten
+								// byte[] encryptedOPEValue = cs.getOPEScheme().encryptString(value , new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpOPEColumns));   // veralteter Kommentar: bei OPE können die Plain IDs benutzt werden, da deren Indexe eh nur auf dem Client liegen, ist auch wichtig, damit rowkey spalten auf verschiedenen Datenbanken den gleichen Index benutzten
+								//byte[] encryptedOPEValue = Misc.longToBytes(cs.getOPEScheme().encrypt(Misc.stringToLong(value), new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpOPEColumns)));
+								byte[] encryptedOPEValue = Misc.longArrayListToByteArray(cs.getOPEScheme().encryptList(Misc.stringToLongArrayList(value), new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpOPEColumns)));
+								
 								byte[] encryptedDETValue = cs.getDETScheme().encrypt(      value.getBytes());
 							
 								byte[] encryptedRNDOPEValue = null;
@@ -615,13 +618,18 @@ class API {
 								tmpColumns.add(cs.getPlainName());
 								
 								HashSet<String> encryptedSEValue  = cs.getSEScheme(). encryptSet(                                   value,  new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpColumns));
-								HashSet<byte[]> encryptedRNDValue = cs.getRNDScheme().encryptByteSet(Misc.StringHashSet2ByteHashSet(value), iv);
+								
+								HashSet<byte[]> encryptedDETValue  = cs.getDETScheme().encryptByteSet(Misc.StringHashSet2ByteHashSet(value));
+								
+								HashSet<byte[]> encryptedRNDDETValue = null;
+								if(!cs.isRNDoverDETStrippedOff()) encryptedRNDDETValue = cs.getRNDScheme().encryptByteSet(encryptedDETValue, iv);
 								
 								// SE column
 								insertRequest.getStringSets().put(cs.getCSEname(), encryptedSEValue);
 						
-								// RND column
-								insertRequest.getByteSets().put(cs.getCRNDname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDValue));
+								// RND or DET column
+								if(!cs.isRNDoverDETStrippedOff()) insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDDETValue));
+								else insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDDETValue));
 						
 							}
 							else { //unencrypted								
@@ -638,7 +646,7 @@ class API {
 						
 							// Encrypt
 							ArrayList<String> tmpColumns = new ArrayList<String>();
-							tmpColumns.add(cs.getPlainName()); // plain name for the client side index
+							tmpColumns.add(cs.getPlainName()); // Plain column name for the client side index
 							
 							long   encryptedOPEValue = cs.getOPEScheme().encrypt(value, new DBLocation(physTable.getKeyspace(), physTable, null, tmpColumns));
 							byte[] encryptedDETValue = cs.getDETScheme().encrypt(Misc.longToBytes(value));
@@ -650,16 +658,10 @@ class API {
 						
 							// OPE column						
 							// store without RND Layer if rowkey column, otherwise the datamodel would be broken
-							if(cs.isRowkeyColumn())				  insertRequest.getByteArgs().put(cs.getCOPEname(), 				encryptedIntRowkey);
-							else if(cs.isRNDoverOPEStrippedOff()) {
-								insertRequest.getByteArgs().put(cs.getCOPEname(), Misc.longToBytes(encryptedOPEValue));
-								System.out.println("test");
-							}
-							else {
-								insertRequest.getByteArgs().put(cs.getCOPEname(),               encryptedRNDOPEValue) ;
-								System.out.println(encryptedRNDOPEValue.length);
-							}
-						
+							if(cs.isRowkeyColumn())				  insertRequest.getByteArgs().put(cs.getCOPEname(), encryptedIntRowkey                 );
+							else if(cs.isRNDoverOPEStrippedOff()) insertRequest.getByteArgs().put(cs.getCOPEname(), Misc.longToBytes(encryptedOPEValue));
+							else                                  insertRequest.getByteArgs().put(cs.getCOPEname(), encryptedRNDOPEValue               );
+
 							// DET column (only if not a rowkey column)
 							if(!cs.isRowkeyColumn()) {
 								if(cs.isRNDoverDETStrippedOff()) insertRequest.getByteArgs().put(cs.getCDETname(), encryptedDETValue   );
@@ -687,10 +689,13 @@ class API {
 								ArrayList<String> tmpColumns = new ArrayList<String>();
 								tmpColumns.add(cs.getPlainName());
 								
-								HashSet<byte[]> encryptedRNDValue = cs.getRNDScheme().encryptByteSet(Misc.LongHashSet2ByteHashSet(value), iv);
+								HashSet<byte[]> encryptedDETValue  = cs.getDETScheme().encryptByteSet(Misc.LongHashSet2ByteHashSet(value));
 								
-								// RND column
-								insertRequest.getByteSets().put(cs.getCRNDname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDValue));		
+								HashSet<byte[]> encryptedRNDDETValue = null;
+								if(!cs.isRNDoverDETStrippedOff()) encryptedRNDDETValue = cs.getRNDScheme().encryptByteSet(encryptedDETValue, iv);
+								
+								if(!cs.isRNDoverDETStrippedOff()) insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDDETValue));
+								else insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedDETValue));		
 							}
 							else { //unencrypted								
 								insertRequest.getIntSets().put(cs.getPlainName(), value);								
@@ -738,10 +743,15 @@ class API {
 								ArrayList<String> tmpColumns = new ArrayList<String>();
 								tmpColumns.add(cs.getPlainName());
 								
-								HashSet<byte[]> encryptedRNDValue = cs.getRNDScheme().encryptByteSet(Misc.byteBufferHashSet2ByteHashSet(value), iv);
+								HashSet<byte[]> encryptedDETValue  = cs.getDETScheme().encryptByteSet(Misc.byteBufferHashSet2ByteHashSet(value));
+								
+								HashSet<byte[]> encryptedRNDDETValue = null;
+								if(!cs.isRNDoverDETStrippedOff()) encryptedRNDDETValue = cs.getRNDScheme().encryptByteSet(encryptedDETValue, iv);
+								
 								
 								// RND column
-								insertRequest.getByteSets().put(cs.getCRNDname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDValue));		
+								if(!cs.isRNDoverDETStrippedOff()) insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDDETValue));	
+								else insertRequest.getByteSets().put(cs.getCRNDname(), Misc.byteHashSet2ByteBufferHashSet(encryptedDETValue));		
 							}
 							else { //unencrypted								
 								insertRequest.getByteSets().put(cs.getPlainName(), value);								
@@ -827,9 +837,25 @@ class API {
 			}
 			
 			// compose RowCondition
-				if(tmpCS.getType() == ColumnType.STRING) conditions.put(new RowCondition(arg[0], comparator, arg[1], 0, null, tmpCS.getType()), tmpCS); 
-				if(tmpCS.getType() == ColumnType.INTEGER) conditions.put(new RowCondition(arg[0], comparator, null, Long.valueOf(arg[1]), null, tmpCS.getType()), tmpCS); 
-				if(tmpCS.getType() == ColumnType.BYTE) conditions.put(new RowCondition(arg[0], comparator, null, 0, arg[1].getBytes(), tmpCS.getType()), tmpCS); 
+			if(tmpCS.getType() == ColumnType.STRING) conditions.put(new RowCondition(arg[0], comparator, arg[1], 0, null, tmpCS.getType()), tmpCS); 
+			if(tmpCS.getType() == ColumnType.INTEGER) conditions.put(new RowCondition(arg[0], comparator, null, Long.valueOf(arg[1]), null, tmpCS.getType()), tmpCS); 
+			if(tmpCS.getType() == ColumnType.BYTE) conditions.put(new RowCondition(arg[0], comparator, null, 0, arg[1].getBytes(), tmpCS.getType()), tmpCS);
+			if(tmpCS.getType() == ColumnType.STRING_SET&&comparator.equals("=")) {
+				for (String s : arg[1].split(",")) {
+					conditions.put(new RowCondition(arg[0], " CONTAINS ", s.trim(), 0, null, tmpCS.getType()), tmpCS); 
+				}
+			}
+			if(tmpCS.getType() == ColumnType.INTEGER_SET&&comparator.equals("=")) {
+				for (String s : arg[1].split(",")) {
+					conditions.put(new RowCondition(arg[0], " CONTAINS ", "", Long.valueOf(s.trim()), null, tmpCS.getType()), tmpCS); 
+				}
+			}
+			if(tmpCS.getType() == ColumnType.BYTE_SET&&comparator.equals("=")) {
+				for (String s : arg[1].split(",")) {
+					conditions.put(new RowCondition(arg[0], " CONTAINS ", "", 0, s.trim().getBytes(), tmpCS.getType()), tmpCS); 
+				}
+			}
+			
 			
 		}
 				
@@ -843,6 +869,7 @@ class API {
 				
 				// bei bedarf onion layer abbauen
 				if((rc.getComparator().equals("="))&&(!cs.isRNDoverDETStrippedOff())) cs.getTable().getDBClient().removeRNDLayer(cs, "DET");
+				if((rc.getComparator().equals(" CONTAINS "))&&(!cs.isRNDoverDETStrippedOff())) cs.getTable().getDBClient().removeRNDLayer(cs, "DET");
 				if((rc.getComparator().equals("<"))&&(!cs.isRNDoverOPEStrippedOff())) cs.getTable().getDBClient().removeRNDLayer(cs, "OPE");
 				if((rc.getComparator().equals(">"))&&(!cs.isRNDoverOPEStrippedOff())) cs.getTable().getDBClient().removeRNDLayer(cs, "OPE");
 			
@@ -855,6 +882,14 @@ class API {
 					rc.setType(ColumnType.BYTE);
 				}
 				
+				if(rc.getComparator().equals(" CONTAINS ")) {
+					rc.setColumnName(cs.getCDETname());
+					if(cs.getType() == ColumnType.STRING_SET) rc.setByteTerm(cs.getDETScheme().encrypt(rc.getStringTerm().getBytes()));		
+					if(cs.getType() == ColumnType.INTEGER_SET) rc.setByteTerm(cs.getDETScheme().encrypt(Misc.longToBytes(rc.getLongTerm())));	
+					if(cs.getType() == ColumnType.BYTE_SET) rc.setByteTerm(cs.getDETScheme().encrypt(rc.getByteTerm()));
+					rc.setType(ColumnType.BYTE);
+				}
+				
 				if((rc.getComparator().equals(">"))||(rc.getComparator().equals("<"))) {
 					rc.setColumnName(cs.getCOPEname());
 					
@@ -863,8 +898,10 @@ class API {
 					tmpColumns.add(cs.getPlainName());
 					DBLocation tmpLocation = new DBLocation(cs.getTable().getKeyspace(), cs.getTable(), null, tmpColumns);
 					
-					if(cs.getType() == ColumnType.STRING) rc.setByteTerm(Misc.longToBytes(cs.getOPEScheme().encrypt(Misc.stringToLong(rc.getStringTerm()), tmpLocation)));
+					//if(cs.getType() == ColumnType.STRING) rc.setByteTerm(cs.getOPEScheme().encryptString(rc.getStringTerm(), tmpLocation));
 					if(cs.getType() == ColumnType.INTEGER) rc.setByteTerm(Misc.longToBytes(cs.getOPEScheme().encrypt(rc.getLongTerm(), tmpLocation)));
+					//if(cs.getType() == ColumnType.STRING) rc.setByteTerm(Misc.longToBytes(cs.getOPEScheme().encrypt(Misc.stringToLong(rc.getStringTerm()), tmpLocation)));
+					if(cs.getType() == ColumnType.STRING) rc.setByteTerm(Misc.longArrayListToByteArray(cs.getOPEScheme().encryptList(Misc.stringToLongArrayList(rc.getStringTerm()), tmpLocation)));
 					//if(cs.getType() == ColumnType.BYTE) rc.setByteTerm(cs.getOPEScheme().encrypt(rc.getByteTerm()));		
 					
 					
@@ -914,7 +951,7 @@ class API {
 					if(involvedSEColumns.contains(cs)) readRequests.get(db).getId().addColumn(cs.getCSEname());
 				}
 				if(cs.getType() == ColumnType.STRING_SET) {
-					readRequests.get(db).getId().addColumn(cs.getCRNDname());
+					readRequests.get(db).getId().addColumn(cs.getCDETname());
 					if(involvedSEColumns.contains(cs)) readRequests.get(db).getId().addColumn(cs.getCSEname());
 				}
 				if(cs.getType() == ColumnType.INTEGER) {
@@ -922,13 +959,13 @@ class API {
 					readRequests.get(db).getId().addColumn(cs.getCDETname());
 				}
 				if(cs.getType() == ColumnType.INTEGER_SET) {
-					readRequests.get(db).getId().addColumn(cs.getCRNDname());
+					readRequests.get(db).getId().addColumn(cs.getCDETname());
 				}
 				if(cs.getType() == ColumnType.BYTE) {
 					readRequests.get(db).getId().addColumn(cs.getCDETname());
 				}
 				if(cs.getType() == ColumnType.BYTE_SET) {
-					readRequests.get(db).getId().addColumn(cs.getCRNDname());
+					readRequests.get(db).getId().addColumn(cs.getCDETname());
 				}
 			}				
 			

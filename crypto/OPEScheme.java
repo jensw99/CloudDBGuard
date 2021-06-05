@@ -2,6 +2,7 @@ package crypto;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import misc.Misc;
@@ -55,6 +56,20 @@ public abstract class OPEScheme extends EncryptionScheme {
 	};
 	
 	
+	/**
+	 * Encrypts a list of values by encrypting every value separately
+	 * @param input the input list
+	 * @param id the destination within the database
+	 * @return the encrypted input list
+	 */
+	public ArrayList<Long> encryptList(ArrayList<Long> input, DBLocation id) {
+		
+		ArrayList<Long> result = new ArrayList<Long>();		
+		for (Long l : input) result.add(encrypt(l, id));
+		return result;
+	};
+	
+	
 	
 	/**
 	 * decryption
@@ -73,7 +88,8 @@ public abstract class OPEScheme extends EncryptionScheme {
 	 */
 	public byte[] encryptString(String s, DBLocation id) {
 		
-		byte[] result = new byte[96];
+		// byte[] result = new byte[96];
+		byte[] result = new byte[64];
 		
 		// split the string into chunks		
 		byte[][] chunks = new byte[8][4];
@@ -101,6 +117,7 @@ public abstract class OPEScheme extends EncryptionScheme {
 		}
 			
 		// append the SHA256 hash
+		/*
 		MessageDigest d;
 		
 		try {
@@ -111,7 +128,7 @@ public abstract class OPEScheme extends EncryptionScheme {
 			
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 		return result;
 	}

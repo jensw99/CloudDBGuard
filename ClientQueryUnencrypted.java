@@ -7,7 +7,7 @@ public class ClientQueryUnencrypted {
 	public static void main(String[] args) {		
 
 		
-		DBCassandraUnencrypted db = new DBCassandraUnencrypted("138.201.66.27", 9042);
+		DBCassandraUnencrypted db = new DBCassandraUnencrypted("ip", 9042);
 		
 		long time = 0;
 		// time += db.query(new String[]{"*"},"enron_unencrypted", "enron",new String[]{});

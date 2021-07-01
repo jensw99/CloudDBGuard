@@ -4,16 +4,18 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.NavigableMap;
 
 import misc.Timer;
 import misc.Misc;
 
+import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Put;
@@ -22,15 +24,12 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.filter.BinaryComparator;
-import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
-import org.apache.hadoop.hbase.filter.SubstringComparator;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.jdom2.Element;
@@ -85,6 +84,10 @@ public class DBClientHBase extends DBClient
 	public void connect() {
 		
 		config = HBaseConfiguration.create();
+		config.set("hbase.zookeeper.quorum", ip+"");
+		config.set("hbase.zookeeper.property.clientPort", "2181");
+		config.set("hbase.rpc.timeout", "60000");
+		config.set("hbase.client.scanner.timeout.period", "60000");
 		System.out.println("hbase config="+config);
 		try {
 			connection = ConnectionFactory.createConnection(config);
@@ -129,12 +132,12 @@ public class DBClientHBase extends DBClient
 	}
 	
 	
-	private Table getTable(String name) {
+	private Table getTable(String keyspace, String name) {
 		
 		if(tables.get(name) != null) return tables.get(name);
 		else {
 			try {
-				Table table = connection.getTable(TableName.valueOf(name));
+				Table table = connection.getTable(TableName.valueOf(keyspace, name));
 				tables.put(name, table);
 				return table;
 			} catch (IOException e1) {
@@ -174,7 +177,7 @@ public class DBClientHBase extends DBClient
 	@Override
 	public boolean cipherTableExists(DBLocation id) {		
 		try {
-			return admin.tableExists(TableName.valueOf((id.getKeyspace().getCipherName() + ":" + id.getTable().getCipherName()).getBytes()));
+			return admin.tableExists(TableName.valueOf(id.getKeyspace().getCipherName().getBytes(), id.getTable().getCipherName().getBytes()));
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -229,15 +232,15 @@ public class DBClientHBase extends DBClient
 		String rowkeyColumnName = null;
 		
 		if((currentRequest.getType() != RequestType.CREATE_KEYSPACE)&&(currentRequest.getType() != RequestType.DROP_KEYSPACE)) {
-			cipherTableName = currentRequest.getId().getKeyspace().getCipherName() + "." + currentRequest.getId().getTable().getCipherName();
 			rowkeyColumnName = currentRequest.getId().getTable().getRowkeyColumnName();
+			cipherTableName = currentRequest.getId().getCipherTableName();
 		}
 		
 		switch(currentRequest.getType()) {
 		
 		case UPDATE_SET:		
 			
-			table = getTable(cipherTableName);
+			table = getTable(currentRequest.getId().getKeyspace().getCipherName(), cipherTableName);
 			
 			//get a reference to the table
 			/*try {
@@ -257,7 +260,7 @@ public class DBClientHBase extends DBClient
 			else if((currentRequest.getIntArgs() != null)&&(!currentRequest.getIntArgs().isEmpty())) columnName = currentRequest.getIntArgs().keySet().iterator().next();
 			else if((currentRequest.getByteArgs() != null)&&(!currentRequest.getByteArgs().isEmpty())) columnName = currentRequest.getByteArgs().keySet().iterator().next();
 							
-			scan.addFamily(Bytes.toBytes(columnName));
+			scan.addFamily(columnName.getBytes());
 			
 			byte[] rowkey = currentRequest.getId().getRowConditions().get(0).getTermAsByteArray();
 			
@@ -267,15 +270,15 @@ public class DBClientHBase extends DBClient
 				ResultScanner scanner = table.getScanner(scan);		
 				for (Result result = scanner.next(); (result != null); result = scanner.next()) {
 					// if(Arrays.equals(r.getId().getRowCondition().getBytes(), result.getRow()))  
-						while(result.getValue(Bytes.toBytes(columnName), ("col" + n).getBytes()) != null ) n++;
+						while(result.getValue(columnName.getBytes(), ("col" + n).getBytes()) != null ) n++;
 				}
 				
 				Put put = new Put(rowkey);
 				
 				
-				if((currentRequest.getStringArgs() != null)&&(!currentRequest.getStringArgs().isEmpty())) put.addColumn(Bytes.toBytes(columnName), Bytes.toBytes("col" + n), currentRequest.getStringArgs().get(columnName).getBytes());
-				else if((currentRequest.getIntArgs() != null)&&(!currentRequest.getIntArgs().isEmpty())) put.addColumn(Bytes.toBytes(columnName), Bytes.toBytes("col" + n), Misc.longToBytes(currentRequest.getIntArgs().get(columnName)));
-				else if((currentRequest.getByteArgs() != null)&&(!currentRequest.getByteArgs().isEmpty())) put.addColumn(Bytes.toBytes(columnName), Bytes.toBytes("col" + n), currentRequest.getByteArgs().get(columnName));
+				if((currentRequest.getStringArgs() != null)&&(!currentRequest.getStringArgs().isEmpty())) put.addColumn(columnName.getBytes(), ("col" + n).getBytes(), currentRequest.getStringArgs().get(columnName).getBytes());
+				else if((currentRequest.getIntArgs() != null)&&(!currentRequest.getIntArgs().isEmpty())) put.addColumn(columnName.getBytes(), ("col" + n).getBytes(), Misc.longToBytes(currentRequest.getIntArgs().get(columnName)));
+				else if((currentRequest.getByteArgs() != null)&&(!currentRequest.getByteArgs().isEmpty())) put.addColumn(columnName.getBytes(), ("col" + n).getBytes(), currentRequest.getByteArgs().get(columnName));
 				
 				timer.start();
 				table.put(put);
@@ -315,11 +318,11 @@ public class DBClientHBase extends DBClient
 			try {
 				
 				// get and delete all tables within the namespace
-				HTableDescriptor[] tds = admin.listTableDescriptorsByNamespace(currentRequest.getId().getKeyspace().getCipherName());
-				for(HTableDescriptor td : tds) {
+				TableName[] tds =  admin.listTableNamesByNamespace(currentRequest.getId().getKeyspace().getCipherName());
+				for(TableName td : tds) {
 					timer.start();
-					admin.disableTable(TableName.valueOf(td.getNameAsString()));
-					admin.deleteTable(TableName.valueOf(td.getNameAsString()));
+					admin.disableTable(td);
+					admin.deleteTable(td);
 					timer.stop();
 				}
 				
@@ -347,15 +350,14 @@ public class DBClientHBase extends DBClient
 		case CREATE_TABLE:
 						
 			//create a new table
-			HTableDescriptor ht_descriptor = new HTableDescriptor(TableName.valueOf(cipherTableName));
-			
-			for(String s : currentRequest.getStringArgs().keySet()) if(!s.equals(rowkeyColumnName)) ht_descriptor.addFamily(new HColumnDescriptor(s));
-			for(String s : currentRequest.getIntArgs().keySet()) if(!s.equals(rowkeyColumnName)) ht_descriptor.addFamily(new HColumnDescriptor(s));
-			for(String s : currentRequest.getByteArgs().keySet()) if(!s.equals(rowkeyColumnName)) ht_descriptor.addFamily(new HColumnDescriptor(s));
+			TableDescriptorBuilder desc = TableDescriptorBuilder.newBuilder(TableName.valueOf(currentRequest.getId().getKeyspace().getCipherName(), cipherTableName));
+			for(String s : currentRequest.getStringArgs().keySet()) if(!s.equals(rowkeyColumnName)) desc = desc.setColumnFamily(ColumnFamilyDescriptorBuilder.of(s));
+			for(String s : currentRequest.getIntArgs().keySet()) if(!s.equals(rowkeyColumnName)) desc = desc.setColumnFamily(ColumnFamilyDescriptorBuilder.of(s));
+			for(String s : currentRequest.getByteArgs().keySet()) if(!s.equals(rowkeyColumnName)) desc = desc.setColumnFamily(ColumnFamilyDescriptorBuilder.of(s));
 					
 			try {
 				timer.start();
-				admin.createTable(ht_descriptor);
+				admin.createTable(desc.build());
 				timer.stop();
 			} catch (IOException e) {
 				//e.printStackTrace();
@@ -367,18 +369,18 @@ public class DBClientHBase extends DBClient
 		case INSERT: 
 			
 			//get a reference to the table
-			table = getTable(cipherTableName);
+			table = getTable(currentRequest.getId().getKeyspace().getCipherName(), cipherTableName);
 			
 			
 			Put put = null;
 			
 			if(currentRequest.getByteArgs().get(rowkeyColumnName) != null) put = new Put(currentRequest.getByteArgs().get(currentRequest.getId().getTable().getRowkeyColumnName()));
 			else if(currentRequest.getStringArgs().get(rowkeyColumnName) != null) put = new Put(currentRequest.getStringArgs().get(rowkeyColumnName).getBytes()); 
-			else if(currentRequest.getIntArgs().get(rowkeyColumnName) != null) put = new Put(Bytes.toBytes(currentRequest.getIntArgs().get(rowkeyColumnName))); 
+			else if(currentRequest.getIntArgs().get(rowkeyColumnName) != null) put = new Put(Misc.longToBytes(currentRequest.getIntArgs().get(rowkeyColumnName))); 
 																					
-			for(String s : currentRequest.getStringArgs().keySet()) if(!s.equals(rowkeyColumnName)) put.addColumn(Bytes.toBytes(s), Bytes.toBytes("col"), currentRequest.getStringArgs().get(s).getBytes()); 
-			for(String s : currentRequest.getIntArgs().keySet()) if(!s.equals(rowkeyColumnName)) put.addColumn(Bytes.toBytes(s), Bytes.toBytes("col"), Misc.longToBytes(currentRequest.getIntArgs().get(s)));
-			for(String s : currentRequest.getByteArgs().keySet()) if(!s.equals(rowkeyColumnName)) put.addColumn(Bytes.toBytes(s), Bytes.toBytes("col"), currentRequest.getByteArgs().get(s)); 
+			for(String s : currentRequest.getStringArgs().keySet()) if(!s.equals(rowkeyColumnName)) put.addColumn(s.getBytes(), "col".getBytes(), currentRequest.getStringArgs().get(s).getBytes()); 
+			for(String s : currentRequest.getIntArgs().keySet()) if(!s.equals(rowkeyColumnName)) put.addColumn(s.getBytes(), "col".getBytes(), Misc.longToBytes(currentRequest.getIntArgs().get(s)));
+			for(String s : currentRequest.getByteArgs().keySet()) if(!s.equals(rowkeyColumnName)) put.addColumn(s.getBytes(), "col".getBytes(), currentRequest.getByteArgs().get(s)); 
 
 			int setElementsCounter = 0;
 			
@@ -388,7 +390,7 @@ public class DBClientHBase extends DBClient
 				HashSet<ByteBuffer> bytesSet = Misc.StringHashSet2ByteBufferHashSet(currentRequest.getStringSets().get(s));
 				for(ByteBuffer bb : bytesSet) {
 					setElementsCounter++;
-					put.addColumn(Bytes.toBytes(s), Bytes.toBytes("col"+setElementsCounter), bb.array());
+					put.addColumn(s.getBytes(), ("col"+setElementsCounter).getBytes(), bb.array());
 				}				
 			}
 			
@@ -398,7 +400,7 @@ public class DBClientHBase extends DBClient
 				HashSet<ByteBuffer> bytesSet = Misc.LongHashSet2ByteBufferHashSet(currentRequest.getIntSets().get(s));
 				for(ByteBuffer bb : bytesSet) {
 					setElementsCounter++;
-					put.addColumn(Bytes.toBytes(s), Bytes.toBytes("col"+setElementsCounter), bb.array());
+					put.addColumn(s.getBytes(), ("col"+setElementsCounter).getBytes(), bb.array());
 				}				
 			}
 
@@ -407,7 +409,7 @@ public class DBClientHBase extends DBClient
 				HashSet<ByteBuffer> bytesSet = currentRequest.getByteSets().get(s);
 				for(ByteBuffer bb : bytesSet) {
 					setElementsCounter++;
-					put.addColumn(Bytes.toBytes(s), Bytes.toBytes("col"+setElementsCounter), bb.array());
+					put.addColumn(s.getBytes(), ("col"+setElementsCounter).getBytes(), bb.array());
 				}				
 			}
 			
@@ -427,11 +429,10 @@ public class DBClientHBase extends DBClient
 			return null;
 			
 		case READ:
-			
 			RowFilter rowFilter1 = null;
 			
 			//get a reference to the table
-			table = getTable(cipherTableName);
+			table = getTable(currentRequest.getId().getKeyspace().getCipherName(), cipherTableName);
 			
 			// add selected columns
 			for(String column : currentRequest.getId().getColumns()) 
@@ -448,8 +449,8 @@ public class DBClientHBase extends DBClient
 							scan.addFamily(rc.getColumnName().getBytes());
 						}
 						else {
-							rowFilter1 = new RowFilter(CompareOp.EQUAL, new BinaryComparator(rc.getByteTerm()));	
-							}
+							rowFilter1 = new RowFilter(CompareOperator.EQUAL, new BinaryComparator(rc.getByteTerm()));	
+						}
 							
 
 				}
@@ -465,30 +466,43 @@ public class DBClientHBase extends DBClient
 				
 				for(RowCondition rc : currentRequest.getId().getRowConditions()) {
 					
+					//Set conditions
+					if(rc.getComparator().equals(" CONTAINS ")) {
+						Filter filter = null;
+						if(rc.getType() == ColumnType.STRING_SET) filter = new HBaseSetFilter(rc.getColumnName().getBytes(), rc.getStringTerm().getBytes());
+						if(rc.getType() == ColumnType.INTEGER_SET) filter = new HBaseSetFilter(rc.getColumnName().getBytes(), Misc.longToBytes(rc.getLongTerm()));
+						if(rc.getType() == ColumnType.BYTE_SET) filter = new HBaseSetFilter(rc.getColumnName().getBytes(), rc.getByteTerm());
+						if(rc.getType() == ColumnType.BYTE) filter = new HBaseSetFilter(rc.getColumnName().getBytes(), rc.getByteTerm());
+						filterlist.addFilter(filter);
+						continue;
+					}
+					
 					if(!rc.getComparator().equals("#")) { // only add non SE row conditions
 					
 						//CompareOp com = null;
-						CompareOp com = null;
-						if(rc.getComparator().equals("=")) com = CompareOp.EQUAL;
-						if(rc.getComparator().equals(">")) com = CompareOp.GREATER;
-						if(rc.getComparator().equals("<")) com = CompareOp.LESS;
+						CompareOperator com = null;
+						if(rc.getComparator().equals("=")) com = CompareOperator.EQUAL;
+						if(rc.getComparator().equals(">")) com = CompareOperator.GREATER;
+						if(rc.getComparator().equals("<")) com = CompareOperator.LESS;
 					
 						
 						
-						SingleColumnValueFilter filter = null;
-						if(rc.getType() == ColumnType.STRING) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), Bytes.toBytes("col"), com, rc.getStringTerm().getBytes());
-						if(rc.getType() == ColumnType.INTEGER) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), Bytes.toBytes("col"), com, Bytes.toBytes(rc.getLongTerm()));
-						if(rc.getType() == ColumnType.BYTE) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), Bytes.toBytes("col"), com, rc.getByteTerm());
-				    
+						Filter filter = null;
+						if(rc.getType() == ColumnType.STRING) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), "col".getBytes(), com, rc.getStringTerm().getBytes());
+						if(rc.getType() == ColumnType.INTEGER) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), "col".getBytes(), com, Misc.longToBytes(rc.getLongTerm()));
+						if(rc.getType() == ColumnType.BYTE) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), "col".getBytes(), com, rc.getByteTerm());
 						filterlist.addFilter(filter);
+				    
+						
 					}
 				}
 				
 				if(rowFilter1 != null) filterlist.addFilter(rowFilter1);
-				
 				if(!filterlist.getFilters().isEmpty()) scan.setFilter(filterlist);
+				System.out.println(filterlist.size());
 				
 			}
+			
 			
 			try {
 				
@@ -507,7 +521,7 @@ public class DBClientHBase extends DBClient
 			RowFilter rowFilter2 = null;
 			
 			//get a reference to the table
-			table = getTable(cipherTableName);
+			table = getTable(currentRequest.getId().getKeyspace().getCipherName(), cipherTableName);
 			
 			// add selected columns
 			for(String column : currentRequest.getId().getColumns()) 
@@ -515,69 +529,83 @@ public class DBClientHBase extends DBClient
 					scan.addFamily(column.getBytes());
 					
 				}
-	
+			
 			// add condition columns
 			if(currentRequest.getId().getRowConditions() != null){
 				for(RowCondition rc: currentRequest.getId().getRowConditions()) {
 					if((rc.getComparator().equals("="))||(rc.getComparator().equals(">"))||(rc.getComparator().equals("<")))
 						if(!rc.getColumnName().equals(currentRequest.getId().getTable().getRowkeyColumnName())) {
 							scan.addFamily(rc.getColumnName().getBytes());
-							
 						}
 						else {
-							
-							rowFilter2 = new RowFilter(CompareOp.EQUAL, new BinaryComparator(rc.getByteTerm()));	
+							rowFilter2 = new RowFilter(CompareOperator.EQUAL, new BinaryComparator(rc.getByteTerm()));	
 						}
-					
+							
 
 				}
 			}
 			
 			// add row conditions
 			if((currentRequest.getId().getRowConditions() != null)&&(currentRequest.getId().getRowConditions().size() > 0)) {
-		
+				
 				FilterList filterlist = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-		
+				
 				for(RowCondition rc : currentRequest.getId().getRowConditions()) {
-			
-					if(!rc.getComparator().equals("#") && (!rc.getColumnName().equals(currentRequest.getId().getTable().getRowkeyColumnName()))) { // only add non SE row conditions
-						
-						CompareOp com = null;
-						if(rc.getComparator().equals("=")) com = CompareOp.EQUAL;
-						if(rc.getComparator().equals(">")) com = CompareOp.GREATER;
-						if(rc.getComparator().equals("<")) com = CompareOp.LESS;
-			
-						SingleColumnValueFilter filter = null;
-						if(rc.getType() == ColumnType.STRING) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), Bytes.toBytes("col"), com, rc.getStringTerm().getBytes());
-						if(rc.getType() == ColumnType.INTEGER) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), Bytes.toBytes("col"), com, Misc.longToBytes(rc.getLongTerm()));
-						if(rc.getType() == ColumnType.BYTE) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), Bytes.toBytes("col"), com, rc.getByteTerm());
-		    
+					
+					//Set conditions
+					if(rc.getComparator().equals(" CONTAINS ")) {
+						Filter filter = null;
+						if(rc.getType() == ColumnType.STRING_SET) filter = new HBaseSetFilter(rc.getColumnName().getBytes(), rc.getStringTerm().getBytes());
+						if(rc.getType() == ColumnType.INTEGER_SET) filter = new HBaseSetFilter(rc.getColumnName().getBytes(), Misc.longToBytes(rc.getLongTerm()));
+						if(rc.getType() == ColumnType.BYTE_SET) filter = new HBaseSetFilter(rc.getColumnName().getBytes(), rc.getByteTerm());
 						filterlist.addFilter(filter);
 					}
+					
+					if(!rc.getComparator().equals("#")) { // only add non SE row conditions
+					
+						//CompareOp com = null;
+						CompareOperator com = null;
+						if(rc.getComparator().equals("=")) com = CompareOperator.EQUAL;
+						if(rc.getComparator().equals(">")) com = CompareOperator.GREATER;
+						if(rc.getComparator().equals("<")) com = CompareOperator.LESS;
+					
+						
+						
+						SingleColumnValueFilter filter = null;
+						if(rc.getType() == ColumnType.STRING) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), "col".getBytes(), com, rc.getStringTerm().getBytes());
+						if(rc.getType() == ColumnType.INTEGER) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), "col".getBytes(), com, Misc.longToBytes(rc.getLongTerm()));
+						if(rc.getType() == ColumnType.BYTE) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), "col".getBytes(), com, rc.getByteTerm());
+						
+						filterlist.addFilter(filter);
+				    
+						
+					}
 				}
-		
-				if(rowFilter2 != null) filterlist.addFilter(rowFilter2);
 				
+				if(rowFilter2 != null) filterlist.addFilter(rowFilter2);
 				if(!filterlist.getFilters().isEmpty()) scan.setFilter(filterlist);
+				System.out.println(filterlist.size());
 				
 			}
-	
+			
+			
 			try {
+				
 				timer.start();
 				ResultScanner tmp = table.getScanner(scan);
 				timer.stop();
 				return new ResultHBase(currentRequest, tmp, timer.getRuntime());
 			} catch (IOException e) {
 				e.printStackTrace();
-				System.out.println("Error during HBase read without IV.");
+				System.out.println("Error during HBase read.");
 				return null;
-			}		
+			}			
 			
 		
 		case READ_WITH_SET_CONDITION:
 			
 			//get a reference to the table
-			table = getTable(cipherTableName);
+			table = getTable(currentRequest.getId().getKeyspace().getCipherName(), cipherTableName);
 			
 			// add columns
 			for(String column : currentRequest.getId().getColumns()) if(!column.equals(currentRequest.getId().getTable().getRowkeyColumnName())) scan.addFamily(column.getBytes());
@@ -618,12 +646,12 @@ public class DBClientHBase extends DBClient
 		
 				for(RowCondition rc : currentRequest.getId().getRowConditions()) {
 			
-						CompareOp com = CompareOp.EQUAL;
+						CompareOperator com = CompareOperator.EQUAL;
 						
 						SingleColumnValueFilter filter = null;
-						if(rc.getType() == ColumnType.STRING) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), Bytes.toBytes("col"), com, rc.getStringTerm().getBytes());
-						if(rc.getType() == ColumnType.INTEGER) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), Bytes.toBytes("col"), com, Misc.longToBytes(rc.getLongTerm()));
-						if(rc.getType() == ColumnType.BYTE) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), Bytes.toBytes("col"), com, rc.getByteTerm());
+						if(rc.getType() == ColumnType.STRING) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), "col".getBytes(), com, rc.getStringTerm().getBytes());
+						if(rc.getType() == ColumnType.INTEGER) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), "col".getBytes(), com, Misc.longToBytes(rc.getLongTerm()));
+						if(rc.getType() == ColumnType.BYTE) filter = new SingleColumnValueFilter(rc.getColumnName().getBytes(), "col".getBytes(), com, rc.getByteTerm());
 		    
 						filterlist.addFilter(filter);
 					
@@ -649,15 +677,15 @@ public class DBClientHBase extends DBClient
 			
 			//get a reference to the table
 			try {
-				table = getTable(cipherTableName);
+				table = getTable(currentRequest.getId().getKeyspace().getCipherName(), cipherTableName);
 				
 				//table = connection.getTable(TableName.valueOf(cipherTableName));
 				
 				Put update = new Put(currentRequest.getId().getRowConditions().get(0).getTermAsByteArray());
 				
-				for(String s : currentRequest.getStringArgs().keySet()) update.addColumn(s.getBytes(), Bytes.toBytes("col"), currentRequest.getStringArgs().get(s).getBytes()); 
-				for(String s : currentRequest.getIntArgs().keySet()) update.addColumn(s.getBytes(), Bytes.toBytes("col"), Misc.longToBytes(currentRequest.getIntArgs().get(s)));
-				for(String s : currentRequest.getByteArgs().keySet()) update.addColumn(s.getBytes(), Bytes.toBytes("col"), currentRequest.getByteArgs().get(s)); 
+				for(String s : currentRequest.getStringArgs().keySet()) update.addColumn(s.getBytes(), "col".getBytes(), currentRequest.getStringArgs().get(s).getBytes()); 
+				for(String s : currentRequest.getIntArgs().keySet()) update.addColumn(s.getBytes(), "col".getBytes(), Misc.longToBytes(currentRequest.getIntArgs().get(s)));
+				for(String s : currentRequest.getByteArgs().keySet()) update.addColumn(s.getBytes(), "col".getBytes(), currentRequest.getByteArgs().get(s)); 
 			
 				timer.start();
 				table.put(update);
@@ -707,13 +735,16 @@ public class DBClientHBase extends DBClient
 		if(onion.equals("DET")) columnName = cs.getCDETname();
 		if(onion.equals("OPE")) columnName = cs.getCOPEname();
 		
+		boolean setColumn = false;
+		if(cs.getType() == ColumnType.BYTE_SET || cs.getType() == ColumnType.STRING_SET || cs.getType() == ColumnType.INTEGER_SET) setColumn = true;
+		
 		Table hTable = null;
-		Scan scan = new Scan();
+		hTable = getTable(table.getKeyspace().getCipherName(), table.getCipherName());
+
+		Scan scan = new Scan().setCaching(400);
 		ResultScanner scanner = null;
 		
 		try {
-			hTable = connection.getTable(TableName.valueOf(table.getKeyspace().getCipherName() + "." + table.getCipherName()));
-			
 			scan.addFamily(table.getIVcolumnName().getBytes());
 			scan.addFamily(columnName.getBytes());
 			
@@ -721,19 +752,35 @@ public class DBClientHBase extends DBClient
 					
 			// for all rows
 			for (org.apache.hadoop.hbase.client.Result result = scanner.next(); result != null; result = scanner.next()) {
-				
-				// RND layer decrypt and remove
-				byte[] encryptedValue = result.getValue(columnName.getBytes(), Bytes.toBytes("col"));
-				byte[] iv = result.getValue(table.getIVcolumnName().getBytes(), Bytes.toBytes("col"));
+				byte[] iv = result.getValue(table.getIVcolumnName().getBytes(), "col".getBytes());
 				byte[] rowkey = result.getRow();
-				byte[] decryptedValue = cs.getRNDScheme().decrypt(encryptedValue, iv);
 				
-				//System.out.println("Row updated with: " + Misc.bytesToLong(decryptedValue));
-				
-				// write back decrypted column content
-				Put put = new Put(rowkey);
-				put.addColumn(columnName.getBytes(), "col".getBytes(), decryptedValue);		
-				if(!put.isEmpty()) hTable.put(put);					
+				if (setColumn) {
+					NavigableMap<byte[],byte[]> values = result.getFamilyMap(columnName.getBytes());				
+					for(Map.Entry <byte[],byte[]> value : values.entrySet()) {
+						// RND layer decrypt and remove
+						byte[] encryptedValue = value.getValue();
+						byte[] decryptedValue = cs.getRNDScheme().decrypt(encryptedValue, iv);
+						
+						//System.out.println("Row updated with: " + Misc.bytesToLong(decryptedValue));
+						
+						// write back decrypted column content
+						Put put = new Put(rowkey);
+						put.addColumn(columnName.getBytes(), value.getKey(), decryptedValue);		
+						if(!put.isEmpty()) hTable.put(put);	
+					}
+				}else {
+					// RND layer decrypt and remove
+					byte[] encryptedValue = result.getValue(columnName.getBytes(), "col".getBytes());
+					byte[] decryptedValue = cs.getRNDScheme().decrypt(encryptedValue, iv);
+					
+					//System.out.println("Row updated with: " + Misc.bytesToLong(decryptedValue));
+					
+					// write back decrypted column content
+					Put put = new Put(rowkey);
+					put.addColumn(columnName.getBytes(), "col".getBytes(), decryptedValue);		
+					if(!put.isEmpty()) hTable.put(put);	
+				}				
 			}
 		} 
 		catch (IOException e) {

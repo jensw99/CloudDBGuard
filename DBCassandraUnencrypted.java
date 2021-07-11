@@ -217,8 +217,9 @@ public class DBCassandraUnencrypted {
 			System.out.println(counter);
 			ClientQueryUnencrypted.counter += counter;
 		}else {
-			System.out.println(rs.all().size());
-			ClientQueryUnencrypted.counter += rs.all().size();
+			int count = rs.all().size();
+			System.out.println(count);
+			ClientQueryUnencrypted.counter += count;
 		}
 		timer.stop();
 		

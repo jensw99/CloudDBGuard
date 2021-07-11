@@ -12,7 +12,9 @@ import misc.Timer;
  */
 public class BenchEnronUnencrypted {
 	
-	private DBCassandraUnencrypted db;
+	// Select database
+	//private DBCassandraUnencrypted db;
+	private DBHBaseUnencrypted db;
 	
 	// statistics
 	private int filesAdded;
@@ -24,10 +26,18 @@ public class BenchEnronUnencrypted {
 	
 	public BenchEnronUnencrypted(String _ip, int _port) {
 		System.out.println("Benching Enron on " + _ip + ":" + _port);
-		db = new DBCassandraUnencrypted(_ip, _port);
+		
+		// Select database
+		//db = new DBCassandraUnencrypted(_ip, _port);
+		db = new DBHBaseUnencrypted(_ip, _port);
 	}
 	
 	
+	
+	/**
+	 * Populates the Database with testdata 
+	 * @param path the path to the enron dataset
+	 */
 	public void upload(String path) {
 		
 		// reset everything
@@ -52,7 +62,7 @@ public class BenchEnronUnencrypted {
 		System.out.println("Insertion complete.");
 		System.out.println(filesAdded + " files added");
 		System.out.println("time for insertions excl. parsing: " + Timer.getTimeAsString(timeForDBCommunication));
-		System.out.println("time for insertions incl. parsing:      " + timerWithParsing.getRuntimeAsString());
+		System.out.println("time for insertions incl. parsing: " + timerWithParsing.getRuntimeAsString());
 		
 	}
 	
@@ -65,7 +75,7 @@ public class BenchEnronUnencrypted {
 	
 	
 	/**
-	 * Populates the Database with (encrypted) testdata 
+	 * Populates the Database with testdata 
 	 * @param input a File object representing a directory, should be the Enron root folder
 	 * @param rootFolder the absolute path of the root folder, where the encryption starts
 	 */
@@ -94,9 +104,9 @@ public class BenchEnronUnencrypted {
 	
 	
 	/**
-	 * Encrypts a file according to the given parameters and the parameter specified in the constructor
+	 * Uploads a file
 	 * @param inputFilePath name of the input file
-	 * @return time needed for insertion incl API overhead
+	 * @return time needed for insertion incl. parsing
 	 */
 	protected long importFile(String inputFilePath) {
 		

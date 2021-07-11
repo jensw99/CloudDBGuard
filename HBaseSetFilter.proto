@@ -1,0 +1,10 @@
+option java_package = "misc";
+option java_outer_classname = "FilterProtos";
+option java_generic_services = true;
+option java_generate_equals_and_hash = true;
+option optimize_for = SPEED;
+
+message HBaseSetFilter{
+    required bytes columnFamily = 1;
+    required bytes value = 2;
+}

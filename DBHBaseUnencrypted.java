@@ -67,12 +67,13 @@ public class DBHBaseUnencrypted {
 			e.printStackTrace();
 		}
 	}
-	public DBHBaseUnencrypted(String ip) {
+	public DBHBaseUnencrypted(String _ip, int _port) {
 		timer = new Timer();
 		
 		config = HBaseConfiguration.create();
-		config.set("hbase.zookeeper.quorum", ip);
-		config.set("hbase.zookeeper.property.clientPort", "2181");
+		config.set("hbase.zookeeper.quorum", _ip);
+		// config.set("hbase.zookeeper.property.clientPort", "2181");
+		config.set("hbase.zookeeper.property.clientPort", _port+"");
 		config.set("hbase.rpc.timeout", "20000");
 		config.set("hbase.client.scanner.timeout.period", "40000");
 		
@@ -287,6 +288,7 @@ public class DBHBaseUnencrypted {
 		
 		if(search.size() > 0) {
 			int counter = 0;
+			timer.start();
 			for(Result r : tmp) {
 				boolean in = true;
 				for (Map.Entry<String, String> e : search.entrySet()) {
@@ -296,11 +298,17 @@ public class DBHBaseUnencrypted {
 				}
 				if (in) counter++;
 			}
+			timer.stop();
 			System.out.println(counter);
 			ClientQueryUnencrypted.counter += counter;
 		}else {
 			int counter = 0;
-			for(Result r : tmp) counter ++;
+			timer.start();
+			for(Result r : tmp) {
+				r.getValue("id".getBytes(), "col".getBytes());
+				counter ++;
+			}
+			timer.stop();
 			System.out.println(counter);
 			ClientQueryUnencrypted.counter += counter;
 		}

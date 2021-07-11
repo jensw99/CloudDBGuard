@@ -6,11 +6,11 @@ public class ClientQueryUnencrypted {
 
 	public static void main(String[] args) {		
 
-		
-		DBCassandraUnencrypted db = new DBCassandraUnencrypted("ip", 9042);
+		// Select database
+		//DBCassandraUnencrypted db = new DBCassandraUnencrypted("localhost", 9042);
+		DBHBaseUnencrypted db = new DBHBaseUnencrypted("localhost", 2181);
 		
 		long time = 0;
-		// time += db.query(new String[]{"*"},"enron_unencrypted", "enron",new String[]{});
 
 		System.out.println("Q0:");
 		
@@ -454,7 +454,7 @@ public class ClientQueryUnencrypted {
 		"enron_unencrypted", "enron",
 		new String[]{"writer=schoolcraft-d","timestamp>16850257","timestamp<16850539"});
 		
-		System.out.println("Q'4: "+ Timer.getTimeAsString(time));
+		System.out.println("Q4: "+ Timer.getTimeAsString(time));
 		System.out.println("Treffer: "+ClientQueryUnencrypted.counter);
 		ClientQueryUnencrypted.counter = 0;
 		time = 0;
@@ -858,7 +858,7 @@ public class ClientQueryUnencrypted {
 		
 		time += db.query(new String[]{"id"},
 		"enron_unencrypted", "enron",
-		new String[]{"subject#Com","body#inno"});
+		new String[]{"subject#IMPORTANT","body#of"});
 		
 		time += db.query(new String[]{"id"},
 		"enron_unencrypted", "enron",

@@ -18,11 +18,14 @@ import java.util.HashSet;
 import java.util.Set;
 //import java.util.StringTokenizer;
 import java.util.Vector;
+
+import com.datastax.oss.protocol.internal.util.Bytes;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 
 //import org.bouncycastle.crypto.paddings.PKCS7Padding;
 
-import com.datastax.driver.core.utils.Bytes;
 //import com.google.common.collect.ImmutableMap;
 
 
@@ -546,6 +549,19 @@ public class Misc {
 		
 		
 		return b;
+	}
+	
+
+	public static ArrayList<Long> byteArrayToLongArrayList(byte[] b) {
+		ArrayList<Long> longArrayList = new ArrayList<Long>();
+		
+		for(int i = 0; i < b.length; i+=8) {
+			long l = Misc.bytesToLong(Arrays.copyOfRange(b, i, i+8));
+			longArrayList.add(l);
+		}
+		
+		
+		return longArrayList;
 	}
 	
 	

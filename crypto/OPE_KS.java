@@ -14,6 +14,7 @@ import databases.ColumnState;
 import databases.DBClient;
 import databases.DBLocation;
 import databases.Request;
+import databases.Result;
 import enums.RequestType;
 import databases.RowCondition;
 import databases.TableState;
@@ -168,21 +169,28 @@ public class OPE_KS extends OPEScheme {
 		
 		// 0. Remove RND Layer
 		ColumnState cs = id.getTable().getColumnByPlainName(id.getColumns().get(0));
-		db.removeRNDLayer(cs, "OPE");
 		
 		ArrayList<String> columns = new ArrayList<String>();
 		columns.add(cs.getCOPEname());
 		
 		// 1. Read the entire Column
 		Request readRequest = new Request(RequestType.READ, new DBLocation(id.getKeyspace(), id.getTable(), null, columns));
-		HashMap<byte[], byte[]> old_raw = db.processRequest(readRequest).getKeyBytesFrom(cs.getCOPEname()); // OPE column is a byte column
+		
+		Result r = db.processRequest(readRequest);
+		HashMap<byte[], byte[]> old_raw = r.getKeyBytesFrom(cs.getCOPEname()); // OPE column is a byte column
+		HashMap<byte[], byte[]> IVs = r.getKeyBytesFrom(cs.getTable().getIVcolumnName()); // OPE column is a byte column
 		
 		
 		// 1.5 recover the Long values
-		HashMap<byte[], Long> old = new HashMap<byte[], Long>();
+		HashMap<byte[], ArrayList<Long>> old = new HashMap<byte[], ArrayList<Long>>();
+		
 		for(byte[] key : old_raw.keySet()) {
-			old.put(key, Misc.bytesToLong(old_raw.get(key)));
+			byte[] decryptedValue = cs.getRNDScheme().decrypt(old_raw.get(key), IVs.get(key));
+			ArrayList<Long> longArrayList = Misc.byteArrayToLongArrayList(decryptedValue);
+			old.put(key, longArrayList);
 		}
+		
+		
 		
 		// 2 create a inverted lookup table to find 
 		HashMap<Long, Long> revMainDict = buildReverseMainDict();
@@ -192,11 +200,25 @@ public class OPE_KS extends OPEScheme {
 			// 3. update the old value with newDict(k, value)
 			
 			ArrayList<RowCondition> tmpRC = new ArrayList<RowCondition>();
-			tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, 0, rowkey, ColumnType.BYTE));
-		
+			ColumnState rcs = id.getTable().getRowkeyColumn();
+			ColumnType rowkeyColumnType = id.getTable().getRowkeyColumn().getType();
+					
+			if(rcs.isEncrypted()) {
+				tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, 0, rowkey, ColumnType.BYTE));
+			}else {
+				if(rowkeyColumnType == ColumnType.STRING) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", Misc.ByteArrayToCharString(rowkey), 0, null, rowkeyColumnType)); 
+				if(rowkeyColumnType == ColumnType.INTEGER) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, Misc.bytesToLong(rowkey), null, rowkeyColumnType)); 
+				if(rowkeyColumnType == ColumnType.BYTE) tmpRC.add(new RowCondition(id.getTable().getRowkeyColumnName(), "=", null, 0, rowkey, rowkeyColumnType)); 
+			}
 			
 			Request updateRequest = new Request(RequestType.UPDATE_VALUE, new DBLocation(id.getKeyspace(), id.getTable(), tmpRC, null));
-			updateRequest.getByteArgs().put(cs.getCOPEname(), Misc.longToBytes(newDict.get(revMainDict.get(old.get(rowkey)))));
+			
+			ArrayList<Long> newValue = new ArrayList<Long>();
+			for(long l : old.get(rowkey)) newValue.add(newDict.get(revMainDict.get(l)));
+			
+			byte[] encryptedValue = cs.getRNDScheme().encrypt(Misc.longArrayListToByteArray(newValue), IVs.get(rowkey));
+			
+			updateRequest.getByteArgs().put(cs.getCOPEname(), encryptedValue);
 					
 			db.processRequest(updateRequest);
 		}

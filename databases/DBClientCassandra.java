@@ -411,10 +411,10 @@ public class DBClientCassandra extends DBClient {
 				query += ";";
 				
 			
-				System.out.println(query);
+				// System.out.println(query);
 				
 				// For a higher timeout
-				SimpleStatement sstmt = SimpleStatement.newInstance(query).setTimeout(Duration.ofSeconds(8));
+				SimpleStatement sstmt = SimpleStatement.newInstance(query).setTimeout(Duration.ofSeconds(20));
 				
 				timer.start();
 				tmp = session.execute(sstmt);
@@ -470,11 +470,13 @@ public class DBClientCassandra extends DBClient {
 				
 				if( (currentRequest.getId().getRowConditions() != null) && (!currentRequest.getId().getRowConditions().isEmpty()) ) query += " ALLOW FILTERING";
 				query += ";";
-							
+				SimpleStatement sstmt = SimpleStatement.newInstance(query).setTimeout(Duration.ofSeconds(20));			
 				//System.out.println(query);
 				timer.start();
-				tmp = session.execute(query);
+				tmp = session.execute(sstmt);
 				timer.stop();
+				
+				
 				
 				return new ResultCassandra(currentRequest, tmp, timer.getRuntime());
 			}
@@ -688,9 +690,7 @@ public class DBClientCassandra extends DBClient {
 		t.stop();
 		//System.out.println("RND layer removed from column \"" + cs.getPlainName() + "\" (" + t.getRuntimeAsString() + ")");
 	}
-
-
-
+	
 	@Override
 	public PreparedStatement registerStatement(String label, String query) {
 		

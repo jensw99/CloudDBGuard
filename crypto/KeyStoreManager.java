@@ -50,7 +50,7 @@ public final class KeyStoreManager {
 	public KeyStoreManager(String _path, String _password) {
 		
 		// Adding our classes to the JCEKS serial filter
-		String serialFilter = "java.lang.Enum;java.security.KeyRep;java.security.KeyRep$Type;javax.crypto.spec.SecretKeySpec;crypto.**;!*";
+		String serialFilter = "java.lang.Enum;java.security.KeyRep;java.security.KeyRep$Type;javax.crypto.spec.SecretKeySpec;crypto.CryptoKey;!*";
 		System.setProperty("jceks.key.serialFilter", serialFilter);
 		
 		path = _path;

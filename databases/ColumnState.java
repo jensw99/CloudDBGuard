@@ -210,21 +210,21 @@ public class ColumnState implements SaveableInXMLElement {
 				else if(profile == TableProfile.STORAGEEFFICIENT) {
 					
 					rnd = new RND_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), key);
-					det = null;
+					det = new DET_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), table.getIV(), table.getKey());
 					ope = null;
 					se = new SE_SWP2(table.getKeyspace().getKeystore(), ts.getDBClient());
 				}
 				else if(profile == TableProfile.OPTIMIZED_READING) {
 					
 					rnd = new RND_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), key);
-					det = null;
+					det = new DET_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), table.getIV(), table.getKey());
 					ope = null;
 					se = new SE_SUISE(table.getKeyspace().getKeystore(), ts.getDBClient(), 32, thisColumnsLocation);
 				}
 				else if(profile == TableProfile.OPTIMIZED_WRITING) {
 					
 					rnd = new RND_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), key);
-					det = null;
+					det = new DET_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), table.getIV(), table.getKey());
 					ope = null;
 					se = new SE_SWP2(table.getKeyspace().getKeystore(), ts.getDBClient());
 				}
@@ -291,21 +291,21 @@ public class ColumnState implements SaveableInXMLElement {
 				else if(profile == TableProfile.STORAGEEFFICIENT) {
 					
 					rnd = new RND_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), key);
-					det = null;
+					det = new DET_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), table.getIV(), table.getKey());
 					ope = null;
 					se = null;
 				}
 				else if(profile == TableProfile.OPTIMIZED_READING) {
 					
 					rnd = new RND_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), key);
-					det = null;
+					det = new DET_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), table.getIV(), table.getKey());
 					ope = null;
 					se = null;
 				}
 				else if(profile == TableProfile.OPTIMIZED_WRITING) {
 					
 					rnd = new RND_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), key);
-					det = null;
+					det = new DET_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), table.getIV(), table.getKey());
 					ope = null;
 					se = null;
 				}
@@ -367,21 +367,21 @@ public class ColumnState implements SaveableInXMLElement {
 				else if(profile == TableProfile.STORAGEEFFICIENT) {
 					
 					rnd = new RND_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), key);
-					det = null;
+					det = new DET_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), table.getIV(), table.getKey());
 					ope = null;
 					se = null;
 				}
 				else if(profile == TableProfile.OPTIMIZED_READING) {
 					
 					rnd = new RND_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), key);
-					det = null;
+					det = new DET_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), table.getIV(), table.getKey());
 					ope = null;
 					se = null;
 				}
 				else if(profile == TableProfile.OPTIMIZED_WRITING) {
 					
 					rnd = new RND_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), key);
-					det = null;
+					det = new DET_AES(table.getKeyspace().getKeystore(), ts.getDBClient(), table.getIV(), table.getKey());
 					ope = null;
 					se = null;
 				}

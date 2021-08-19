@@ -60,6 +60,7 @@ public class DecryptedResults {
 	
 	// the time needed for decrypting all parts of the final result
 	private long decryptionTime = 0;
+	
 		
 	
 	
@@ -100,6 +101,7 @@ public class DecryptedResults {
 		
 		// it the result is empty, abort
 		if(IVs == null) return;
+		if(IVs.isEmpty()) return;
 		
 		// if this is the first resultset we simply add all its rows for decryption
 		if(resultsetsAdded == 0) rowkeysForDecryption = IVs.keySet(); 

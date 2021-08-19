@@ -77,6 +77,7 @@ class API {
 	/**
 	 * Initializes the Interface, reads in the metadata stored in the config file and initializes all objects
 	 * @param path the path to the config file
+	 * @param password the password of the keysafe
 	 * @param silent turns on/off console output
 	 */
 	public API(String _path, String _password, boolean _silent) {
@@ -367,7 +368,7 @@ class API {
 							}
 						
 							if(cs.getType() == ColumnType.INTEGER) {
-								createRequest.getIntArgs().put(cs.getCOPEname(), (long)3);						
+								createRequest.getByteArgs().put(cs.getCOPEname(), "primarykey".getBytes());						
 							}
 						
 							/*if(cs.getType() == ColumnType.BYTE) {							
@@ -517,7 +518,7 @@ class API {
 			if(rowkeyColumn.getType() == ColumnType.INTEGER) {
 				
 				encryptedIntRowkey = Misc.longToBytes(rowkeyColumn.getOPEScheme().encrypt(intData.get(rowkeyColumn.getPlainName()), new DBLocation(rowkeyColumn.getTable().getKeyspace(), rowkeyColumn.getTable(), null, tmp)));
-				rowkeyRowCondition = new RowCondition(rowkeyColumn.getCOPEname(), "=", null, 0, encryptedStringRowkey, ColumnType.BYTE);
+				rowkeyRowCondition = new RowCondition(rowkeyColumn.getCOPEname(), "=", null, 0, encryptedIntRowkey, ColumnType.BYTE);
 			
 				rowkeyProvided = true;
 			}
@@ -574,6 +575,7 @@ class API {
 								// byte[] encryptedOPEValue = cs.getOPEScheme().encryptString(value , new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpOPEColumns));   // veralteter Kommentar: bei OPE können die Plain IDs benutzt werden, da deren Indexe eh nur auf dem Client liegen, ist auch wichtig, damit rowkey spalten auf verschiedenen Datenbanken den gleichen Index benutzten
 								//byte[] encryptedOPEValue = Misc.longToBytes(cs.getOPEScheme().encrypt(Misc.stringToLong(value), new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpOPEColumns)));
 								byte[] encryptedOPEValue = Misc.longArrayListToByteArray(cs.getOPEScheme().encryptList(Misc.stringToLongArrayList(value), new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpOPEColumns)));
+								if(physTable.getProfile()  == TableProfile.OPTIMIZED_WRITING) encryptedOPEValue = Misc.longArrayListToByteArray(cs.getOPEScheme().encryptList(Misc.stringToLongArrayList(value), new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpOPEColumns)));
 								
 								byte[] encryptedDETValue = cs.getDETScheme().encrypt(      value.getBytes());
 							
@@ -618,6 +620,7 @@ class API {
 								tmpColumns.add(cs.getPlainName());
 								
 								HashSet<String> encryptedSEValue  = cs.getSEScheme(). encryptSet(                                   value,  new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpColumns));
+								if(physTable.getProfile() == TableProfile.OPTIMIZED_WRITING) encryptedSEValue = cs.getSEScheme(). encryptSet(                                   value,  new DBLocation(physTable.getKeyspace(), physTable, tmpRC, tmpColumns));
 								
 								HashSet<byte[]> encryptedDETValue  = cs.getDETScheme().encryptByteSet(Misc.StringHashSet2ByteHashSet(value));
 								
@@ -629,7 +632,7 @@ class API {
 						
 								// RND or DET column
 								if(!cs.isRNDoverDETStrippedOff()) insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDDETValue));
-								else insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDDETValue));
+								else                              insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedDETValue   ));
 						
 							}
 							else { //unencrypted								
@@ -695,7 +698,7 @@ class API {
 								if(!cs.isRNDoverDETStrippedOff()) encryptedRNDDETValue = cs.getRNDScheme().encryptByteSet(encryptedDETValue, iv);
 								
 								if(!cs.isRNDoverDETStrippedOff()) insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDDETValue));
-								else insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedDETValue));		
+								else                              insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedDETValue   ));		
 							}
 							else { //unencrypted								
 								insertRequest.getIntSets().put(cs.getPlainName(), value);								
@@ -751,7 +754,7 @@ class API {
 								
 								// RND column
 								if(!cs.isRNDoverDETStrippedOff()) insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedRNDDETValue));	
-								else insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedDETValue));		
+								else                              insertRequest.getByteSets().put(cs.getCDETname(), Misc.byteHashSet2ByteBufferHashSet(encryptedDETValue   ));		
 							}
 							else { //unencrypted								
 								insertRequest.getByteSets().put(cs.getPlainName(), value);								
@@ -1134,5 +1137,4 @@ class API {
 		DBClientFactory.closeAllConnections();
 		
 	}
-
 }

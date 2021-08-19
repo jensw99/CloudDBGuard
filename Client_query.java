@@ -5,8 +5,6 @@ import java.util.concurrent.ExecutorService;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.security.User;
 
-import com.datastax.driver.core.Configuration;
-
 import databases.DecryptedResults;
 import enums.TableProfile;
 import misc.Timer;
@@ -14,32 +12,13 @@ import misc.Timer;
 /**
  * The client application
  * 
- * @author Tim Waage
- *
- *
- * Abh��ngigkeiten:
+ * @author Tim Waage, Jens Weigel
  * 
- * maximal Java SE 1.8u144 wegen JCEKS keystore issue
+ * Dependencies:
  * 
- * 
- * bcprov-jdk15on-160.jar     x      
- * commons-codec-1.11.jar  x 
- * hadoop-common-2.7.7.jar  x
- * jdom-2.0.6.jar    x      
- * netty-buffer-4.0.33.Final.jar    x
- * netty-handler-4.0.33.Final.jar  x
- * cassandra-driver-core-3.0.1.jar  
- * commons-math3-3.6.1.jar  x
- * hbase-client-2.1.2.jar   x
- * log4j-1.2.17.jar        
- * netty-codec-4.0.33.Final.jar   x
- * netty-transport-4.0.33.Final.jar  x
- * cassandra-driver-core-3.1.4.jar  
- * guava-16.0.1.jar         
- * hbase-common-2.1.2.jar   x
- * metrics-core-3.1.2.jar  
- * netty-common-4.0.33.Final.jar   x 
- * slf4j-api-1.7.25.jar
+ * jdom-2.0.6.jar
+ * Datastax Cassandra Java Driver 4.11.0 + their Dependencies
+ * HBase Driver 2.4.4 + their Dependencies
  * 
  * 
  */
@@ -198,8 +177,7 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"receiver= jennifer.medcalf@enron.com"});
-				
+		new String[]{"receiver= jennifer.medcalf@enron.com"});	
 
 		System.out.println("Q1:");
 
@@ -242,7 +220,7 @@ public class Client_query {
 		api.query(new String[]{"id"},
 		"enron", "mail",
 		new String[]{"timestamp>16523882","timestamp<16523898"});
-			
+		
 		
 		System.out.println("Q'1:");
 
@@ -339,7 +317,7 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#Lakewood Peaker"});
+		new String[]{"subject#Lakewood"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -351,11 +329,11 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#BNP PARIBAS"});
+		new String[]{"subject#PARIBAS"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#Your Brother"});
+		new String[]{"subject#Brother"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -363,15 +341,15 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#news!"});
+		new String[]{"subject#Your"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#Re: good morning"});
+		new String[]{"subject#morning"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#Re: Genesis Plant Tour"});
+		new String[]{"subject#Tour"});
 		
 
 		System.out.println("Q3:");
@@ -504,7 +482,7 @@ public class Client_query {
 		"enron", "mail",
 		new String[]{"writer=schoolcraft-d","timestamp>16850257","timestamp<16850539"});
 
-		
+		System.out.println("Q'4:");
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -594,11 +572,11 @@ public class Client_query {
 
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"writer=allen-p","body#Burson"});
+		new String[]{"writer=allen-p","body#He"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"writer=allen-p","body#Phantom St= ock"});
+		new String[]{"writer=allen-p","body#Phantom"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -610,15 +588,15 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"writer=allen-p","body#Section 6.2"});
+		new String[]{"writer=allen-p","body#Section"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"writer=arnold-j","body#Risk Management"});
+		new String[]{"writer=arnold-j","body#Management"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"writer=arnold-j","body#sh"});
+		new String[]{"writer=arnold-j","body#Risk"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -626,7 +604,7 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"writer=arnold-j","body#CPE credits"});
+		new String[]{"writer=arnold-j","body#credits"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -775,7 +753,7 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"body#after", "timestamp>16644660","timestamp<16650463"});
+		new String[]{"body#people", "timestamp>16644660","timestamp<16650463"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -783,11 +761,11 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"body#BRM Case", "timestamp>16680405", "timestamp<16780139"});
+		new String[]{"body#Case", "timestamp>16680405", "timestamp<16780139"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"body#report writer", "timestamp>16758830", "timestamp<16905073"});
+		new String[]{"body#writer", "timestamp>16758830", "timestamp<16905073"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -795,7 +773,7 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"body#USA", "timestamp>16721061", "timestamp<16731122"});
+		new String[]{"body#of", "timestamp>16721061", "timestamp<16731122"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -803,7 +781,7 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"body#the file","timestamp>16349357","timestamp<16720746"});
+		new String[]{"body#file","timestamp>16349357","timestamp<16720746"});
 		
 		
 
@@ -854,7 +832,7 @@ public class Client_query {
 
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#INFORMATION","body#User"});
+		new String[]{"subject#Scheduling","body#request"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -862,11 +840,11 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#Investment","body#survey"});
+		new String[]{"subject#to","body#information"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#loan","body#ll"});
+		new String[]{"subject#Letter","body#draft"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -874,15 +852,15 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#Com","body#inno"});
+		new String[]{"subject#IMPORTANT","body#of"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#gas","body#mark"});
+		new String[]{"subject#Generators:","body#market"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#processed","body#Jenn"});
+		new String[]{"subject#CSFB","body#New"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
@@ -890,7 +868,7 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"subject#Re","body#Yes"});
+		new String[]{"subject#Re:","body#phone"});
 		
 		
 /*
@@ -990,7 +968,7 @@ public class Client_query {
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",
-		new String[]{"writer=allen-p","timestamp>16225560","timestamp<16310031","body#me?"});
+		new String[]{"writer=allen-p","timestamp>16225560","timestamp<16310031","body#me"});
 		
 		api.query(new String[]{"id"},
 		"enron", "mail",

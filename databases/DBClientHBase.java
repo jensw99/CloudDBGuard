@@ -84,7 +84,7 @@ public class DBClientHBase extends DBClient
 	public void connect() {
 		
 		config = HBaseConfiguration.create();
-		config.set("hbase.zookeeper.quorum", ip+"");
+		config.set("hbase.zookeeper.quorum", ip);
 		config.set("hbase.zookeeper.property.clientPort", "2181");
 		config.set("hbase.rpc.timeout", "60000");
 		config.set("hbase.client.scanner.timeout.period", "60000");
@@ -444,7 +444,7 @@ public class DBClientHBase extends DBClient
 			// add condition columns
 			if(currentRequest.getId().getRowConditions() != null){
 				for(RowCondition rc: currentRequest.getId().getRowConditions()) {
-					if((rc.getComparator().equals("="))||(rc.getComparator().equals(">"))||(rc.getComparator().equals("<")))
+					if((rc.getComparator().equals("="))||(rc.getComparator().equals(">"))||(rc.getComparator().equals("<"))||(rc.getComparator().equals(" CONTAINS ")))
 						if(!rc.getColumnName().equals(currentRequest.getId().getTable().getRowkeyColumnName())) {
 							scan.addFamily(rc.getColumnName().getBytes());
 						}
@@ -499,7 +499,7 @@ public class DBClientHBase extends DBClient
 				
 				if(rowFilter1 != null) filterlist.addFilter(rowFilter1);
 				if(!filterlist.getFilters().isEmpty()) scan.setFilter(filterlist);
-				System.out.println(filterlist.size());
+				//System.out.println(filterlist.size());
 				
 			}
 			
@@ -533,7 +533,7 @@ public class DBClientHBase extends DBClient
 			// add condition columns
 			if(currentRequest.getId().getRowConditions() != null){
 				for(RowCondition rc: currentRequest.getId().getRowConditions()) {
-					if((rc.getComparator().equals("="))||(rc.getComparator().equals(">"))||(rc.getComparator().equals("<")))
+					if((rc.getComparator().equals("="))||(rc.getComparator().equals(">"))||(rc.getComparator().equals("<"))||(rc.getComparator().equals(" CONTAINS ")))
 						if(!rc.getColumnName().equals(currentRequest.getId().getTable().getRowkeyColumnName())) {
 							scan.addFamily(rc.getColumnName().getBytes());
 						}
@@ -584,7 +584,7 @@ public class DBClientHBase extends DBClient
 				
 				if(rowFilter2 != null) filterlist.addFilter(rowFilter2);
 				if(!filterlist.getFilters().isEmpty()) scan.setFilter(filterlist);
-				System.out.println(filterlist.size());
+				//System.out.println(filterlist.size());
 				
 			}
 			
@@ -735,6 +735,9 @@ public class DBClientHBase extends DBClient
 		if(onion.equals("DET")) columnName = cs.getCDETname();
 		if(onion.equals("OPE")) columnName = cs.getCOPEname();
 		
+		// Already stripped of?
+		if (onion.equals("DET") && cs.isRNDoverDETStrippedOff() || onion.equals("OPE") && cs.isRNDoverOPEStrippedOff()) return;
+		
 		boolean setColumn = false;
 		if(cs.getType() == ColumnType.BYTE_SET || cs.getType() == ColumnType.STRING_SET || cs.getType() == ColumnType.INTEGER_SET) setColumn = true;
 		
@@ -756,7 +759,8 @@ public class DBClientHBase extends DBClient
 				byte[] rowkey = result.getRow();
 				
 				if (setColumn) {
-					NavigableMap<byte[],byte[]> values = result.getFamilyMap(columnName.getBytes());				
+					NavigableMap<byte[],byte[]> values = result.getFamilyMap(columnName.getBytes());
+					Put put = new Put(rowkey);
 					for(Map.Entry <byte[],byte[]> value : values.entrySet()) {
 						// RND layer decrypt and remove
 						byte[] encryptedValue = value.getValue();
@@ -765,10 +769,9 @@ public class DBClientHBase extends DBClient
 						//System.out.println("Row updated with: " + Misc.bytesToLong(decryptedValue));
 						
 						// write back decrypted column content
-						Put put = new Put(rowkey);
 						put.addColumn(columnName.getBytes(), value.getKey(), decryptedValue);		
-						if(!put.isEmpty()) hTable.put(put);	
 					}
+					if(!put.isEmpty()) hTable.put(put);	
 				}else {
 					// RND layer decrypt and remove
 					byte[] encryptedValue = result.getValue(columnName.getBytes(), "col".getBytes());
@@ -796,13 +799,9 @@ public class DBClientHBase extends DBClient
 		System.out.println("RND layer removed from column \"" + cs.getPlainName() + "\" (" + t.getRuntimeAsString() + ")");
 				
 	}
-
-
 	
 
-	@Override
-	
-		
+	@Override		
 	public PreparedStatement registerStatement(String label, String query) {
 		
 		return null;
